@@ -1,10 +1,10 @@
-import { YStack, XStack, Text, Circle } from 'tamagui'
-import { useState, useRef } from 'react'
-import { Pressable, ScrollView, Dimensions } from 'react-native'
 import { useColorScheme } from '@/hooks/use-color-scheme'
-import * as Haptics from 'expo-haptics'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
+import * as Haptics from 'expo-haptics'
+import { useRef, useState } from 'react'
+import { Dimensions, Pressable, ScrollView } from 'react-native'
+import Animated, { FadeIn } from 'react-native-reanimated'
+import { Circle, Text, XStack, YStack } from 'tamagui'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
@@ -18,10 +18,10 @@ type StreakCalendarProps = {
   longestStreak?: number
 }
 
-export default function StreakCalendar({ 
-  streakData = {}, 
+export default function StreakCalendar({
+  streakData = {},
   currentStreak = 7,
-  longestStreak = 14 
+  longestStreak = 14
 }: StreakCalendarProps) {
   const isDark = useColorScheme() === 'dark'
   const [expanded, setExpanded] = useState(false)
@@ -32,12 +32,12 @@ export default function StreakCalendar({
   const generateSampleData = (): StreakData => {
     const data: StreakData = {}
     const today = new Date()
-    
+
     for (let i = 0; i < 90; i++) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
       const dateStr = date.toISOString().split('T')[0]
-      
+
       // Random activity level (0-5)
       if (i < 7) {
         data[dateStr] = Math.random() > 0.1 ? Math.floor(Math.random() * 5) + 1 : 0
@@ -52,19 +52,19 @@ export default function StreakCalendar({
 
   // Get intensity color based on activity count
   const getIntensityColor = (count: number) => {
-    if (count === 0) return isDark ? '#1e293b' : '#f1f5f9'
-    if (count === 1) return isDark ? '#134e4a' : '#ccfbf1'
-    if (count === 2) return isDark ? '#0f766e' : '#5eead4'
-    if (count === 3) return isDark ? '#0d9488' : '#2dd4bf'
-    if (count >= 4) return isDark ? '#14b8a6' : '#14b8a6'
-    return isDark ? '#1e293b' : '#f1f5f9'
+    if (count === 0) return isDark ? '#161b22' : '#ebedf0'
+    if (count === 1) return isDark ? '#0e4429' : '#9be9a8'
+    if (count === 2) return isDark ? '#006d32' : '#40c463'
+    if (count === 3) return isDark ? '#26a641' : '#30a14e'
+    if (count >= 4) return isDark ? '#39d353' : '#216e39'
+    return isDark ? '#161b22' : '#ebedf0'
   }
 
   // Get last 7 days for compact view
   const getLast7Days = () => {
     const days = []
     const today = new Date()
-    
+
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
@@ -85,32 +85,32 @@ export default function StreakCalendar({
     const lastDay = new Date(year, month + 1, 0)
     const startDay = firstDay.getDay() // 0 = Sunday
     const daysInMonth = lastDay.getDate()
-    
+
     const weeks: Array<Array<{ date: string; day: number; count: number } | null>> = []
     let currentWeek: Array<{ date: string; day: number; count: number } | null> = []
-    
+
     // Fill initial empty days
     for (let i = 0; i < startDay; i++) {
       currentWeek.push(null)
     }
-    
+
     // Fill days of month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day)
       const dateStr = date.toISOString().split('T')[0]
-      
+
       currentWeek.push({
         date: dateStr,
         day,
         count: data[dateStr] || 0
       })
-      
+
       if (currentWeek.length === 7) {
         weeks.push(currentWeek)
         currentWeek = []
       }
     }
-    
+
     // Fill remaining empty days
     if (currentWeek.length > 0) {
       while (currentWeek.length < 7) {
@@ -118,7 +118,7 @@ export default function StreakCalendar({
       }
       weeks.push(currentWeek)
     }
-    
+
     return weeks
   }
 
@@ -311,8 +311,8 @@ export default function StreakCalendar({
                           shadowRadius: 3,
                         } : {}}
                       >
-                        <Text 
-                          fontSize={11} 
+                        <Text
+                          fontSize={11}
                           fontWeight="600"
                           color={day.count > 0 ? '#fff' : '$gray9'}
                         >

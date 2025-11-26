@@ -1,567 +1,533 @@
-import { YStack, XStack, Text, Circle, Sheet } from 'tamagui'
-import * as Haptics from 'expo-haptics'
-import { ScrollView, Pressable } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Ionicons from '@expo/vector-icons/Ionicons'
-import { useRouter } from 'expo-router'
-import { useState, useEffect } from 'react'
-import { useColorScheme } from '@/hooks/use-color-scheme'
-import { LinearGradient } from 'expo-linear-gradient'
-import Animated, { 
-  FadeInDown, 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming,
-  withSequence,
-  Easing 
-} from 'react-native-reanimated'
-import StreakCalendar from '@/components/StreakCalendar'
+import GamificationHeader from '@/components/GamificationHeader';
+import StreakCalendar from '@/components/StreakCalendar';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, ScrollView, View, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Circle, Text, XStack, YStack } from 'tamagui';
+import { authAPI } from '@/services/auth.api';
+import Skeleton from '@/components/ui/Skeleton';
+
+const { width } = Dimensions.get('window');
+
+const quizModes = [
+  {
+    type: 'balanced',
+    icon: 'scale-balance',
+    title: 'Balanced',
+    color: '#6366f1',
+  },
+  {
+    type: 'adaptive',
+    icon: 'brain',
+    title: 'Adaptive',
+    color: '#8b5cf6',
+  },
+  {
+    type: 'weak_area',
+    icon: 'target',
+    title: 'Weak Areas',
+    color: '#ef4444',
+  }
+];
 
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets()
-  const router = useRouter()
-  const isDark = useColorScheme() === 'dark'
-  
-  const [userName] = useState('Aspirant')
-  const [level] = useState(12)
-  const [xp] = useState(2450)
-  const [xpToNext] = useState(3000)
-  const [coins] = useState(340)
-  const [currentStreak] = useState(7)
-  const [longestStreak] = useState(14)
-  
-  const [selectedMode, setSelectedMode] = useState<'bullet' | 'blitz' | 'rapid'>('blitz')
-  const [playType, setPlayType] = useState<'solo' | 'friends' | 'random'>('solo')
-  const [customTopicEnabled, setCustomTopicEnabled] = useState(false)
-  const [showTopicSheet, setShowTopicSheet] = useState(false)
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
-  
-  const fireScale = useSharedValue(1)
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedMode, setSelectedMode] = useState('balanced');
 
   useEffect(() => {
-    fireScale.value = withRepeat(
-      withSequence(
-        withTiming(1.15, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    )
-  }, [])
+    loadUserData();
+  }, []);
 
-  const fireAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: fireScale.value }]
-  }))
-
-  const modes = [
-    { 
-      key: 'bullet' as const, 
-      label: 'Bullet', 
-      time: '30s', 
-      icon: 'flash', 
-      questions: 10,
-      color: '#22c55e',
-      gradient: ['#22c55e', '#22c55e'] as [string, string],
-      desc: 'Lightning fast'
-    },
-    { 
-      key: 'blitz' as const, 
-      label: 'Blitz', 
-      time: '2min', 
-      icon: 'flame', 
-      questions: 15,
-      color: '#3b82f6',
-      gradient: ['#3b82f6', '#3b82f6'] as [string, string],
-      desc: 'Think quick'
-    },
-    { 
-      key: 'rapid' as const, 
-      label: 'Rapid', 
-      time: '5min', 
-      icon: 'timer', 
-      questions: 25,
-      color: '#8b5cf6',
-      gradient: ['#8b5cf6', '#8b5cf6'] as [string, string],
-      desc: 'Deep focus'
+  const loadUserData = async () => {
+    try {
+      const user = await authAPI.getCurrentUser();
+      setUserData(user);
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    } finally {
+      setLoading(false);
     }
-  ]
+  };
 
-  const dailyQuests = [
-    { id: 1, title: 'Complete 3 Quizzes', progress: 1, total: 3, xp: 50, icon: 'document-text', color: '#3b82f6' },
-    { id: 2, title: 'Score 80%+ in History', progress: 0, total: 1, xp: 100, icon: 'school', color: '#8b5cf6' },
-    { id: 3, title: 'Win a Multiplayer Match', progress: 0, total: 1, xp: 75, icon: 'trophy', color: '#f59e0b' },
-  ]
+  const userStats = {
+    streak: userData?.userStats?.currentStreak || 0,
+    xp: userData?.userStats?.totalXp || 0,
+    level: userData?.userStats?.level || 1,
+    xpToNextLevel: userData?.userStats?.xpToNextLevel || 100,
+    accuracy: userData?.userStats?.overallAccuracy || '0.00',
+    quizzesCompleted: userData?.userStats?.totalQuizzesCompleted || 0,
+    name: userData?.fullName || userData?.username || 'Aspirant',
+  };
 
-  const newsTopics = [
-    { id: 1, title: 'Union Budget 2025', questions: 10, isNew: true, icon: 'cash' },
-    { id: 2, title: 'Supreme Court Updates', questions: 8, isNew: true, icon: 'hammer' },
-    { id: 3, title: 'International Affairs', questions: 12, isNew: false, icon: 'globe' },
-  ]
+  const currentLevelXp = userStats.xp - (userStats.xpToNextLevel || 0);
+  const nextLevelXp = currentLevelXp + userStats.xpToNextLevel;
+  const xpProgress = nextLevelXp > 0 ? Math.round((currentLevelXp / nextLevelXp) * 100) : 0;
 
-  const quizTopics = [
-    { id: 'history', title: 'Indian History', icon: 'time', color: '#f59e0b' },
-    { id: 'geography', title: 'Geography', icon: 'earth', color: '#22c55e' },
-    { id: 'polity', title: 'Polity & Governance', icon: 'shield', color: '#3b82f6' },
-    { id: 'economy', title: 'Economy', icon: 'trending-up', color: '#8b5cf6' },
-    { id: 'science', title: 'Science & Tech', icon: 'flask', color: '#06b6d4' },
-    { id: 'current', title: 'Current Affairs', icon: 'newspaper', color: '#ec4899' },
-    { id: 'kerala', title: 'Kerala Specific', icon: 'location', color: '#f97316' },
-    { id: 'general', title: 'General Knowledge', icon: 'bulb', color: '#eab308' },
-  ]
+  const handleStartQuiz = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    router.push(`/quiz?mode=${selectedMode}` as any);
+  };
 
-  const onModeSelect = async (mode: 'bullet' | 'blitz' | 'rapid') => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    setSelectedMode(mode)
+  const handleModeSelect = (mode: string) => {
+    Haptics.selectionAsync();
+    setSelectedMode(mode);
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#100f0fff' : '#ffffff' }}>
+        <YStack p="$4" gap="$6">
+          <Skeleton height={120} borderRadius={24} />
+          <Skeleton height={280} borderRadius={24} />
+          <XStack gap="$3">
+            <Skeleton width="48%" height={140} borderRadius={20} />
+            <Skeleton width="48%" height={140} borderRadius={20} />
+          </XStack>
+        </YStack>
+      </SafeAreaView>
+    );
   }
-
-  const onPlayTypeSelect = async (type: 'solo' | 'friends' | 'random') => {
-    await Haptics.selectionAsync()
-    setPlayType(type)
-  }
-
-  const onToggleCustomTopic = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    setCustomTopicEnabled(!customTopicEnabled)
-    if (!customTopicEnabled) {
-      setSelectedTopics([])
-    }
-  }
-
-  const onSelectTopic = async (topicId: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    setSelectedTopics(prev => 
-      prev.includes(topicId) 
-        ? prev.filter(id => id !== topicId)
-        : [...prev, topicId]
-    )
-  }
-
-  const onStartQuiz = async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-    if (customTopicEnabled && selectedTopics.length === 0) {
-      setShowTopicSheet(true)
-      return
-    }
-    // Quiz start logic with selected topics
-    console.log('Starting quiz with topics:', selectedTopics)
-  }
-
-  const onDailyNewsPress = async (topicId: number) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-  }
-
-  const selectedModeData = modes.find(m => m.key === selectedMode)!
-
-  // Card wrapper component for consistent styling
-  const Card = ({ children, style }: { children: React.ReactNode; style?: any }) => (
-    <YStack
-      bg={isDark ? '$gray2' : '#fff'}
-      br={20}
-      p="$4"
-      style={[{
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: isDark ? 0.3 : 0.1,
-        shadowRadius: 10,
-        borderWidth: isDark ? 0 : 1,
-        borderColor: isDark ? 'transparent' : '#e5e7eb',
-      }, style]}
-    >
-      {children}
-    </YStack>
-  )
 
   return (
-    <YStack f={1} bg={isDark ? '$background' : '#f9fafb'}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <YStack p="$4" pt={insets.top + 16} gap="$4">
-          
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#1a1717ff' : '#fafef9ff' }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <YStack gap="$5">
           {/* Header */}
-          <Animated.View entering={FadeInDown.delay(50).springify()}>
-            <XStack ai="center" jc="space-between">
-              <XStack ai="center" gap="$3">
-                <YStack>
-                  <YStack 
-                    w={56} h={56} br={18} 
-                    ai="center" jc="center" 
-                    overflow="hidden"
-                    style={{ borderWidth: 2, borderColor: '#3b82f6' }}
-                  >
-                    <LinearGradient
-                      colors={['#06b6d4', '#3b82f6']}
-                      style={{ position: 'absolute', width: '100%', height: '100%' }}
-                    />
-                    <Text fontSize={24} fontWeight="800" color="#fff">A</Text>
-                  </YStack>
-                  <YStack 
-                    position="absolute" 
-                    bottom={-4} right={-4}
-                    bg="$orange9" 
-                    px="$2" py={2} 
-                    br={10}
-                    style={{ borderWidth: 2, borderColor: isDark ? '#1e293b' : '#fff' }}
-                  >
-                    <Text fontSize={10} fontWeight="800" color="#fff">{level}</Text>
-                  </YStack>
-                </YStack>
-                
-                <YStack>
-                  <Text fontSize={13} color="$gray10">Welcome back</Text>
-                  <Text fontSize={20} fontWeight="800">{userName}!</Text>
-                </YStack>
-              </XStack>
+          <GamificationHeader {...userStats} />
 
-              <XStack ai="center" gap="$2">
-                <XStack ai="center" gap="$1" bg="$gray3" px="$3" py="$2" br={20}>
-                  <Text fontSize={16}>🪙</Text>
-                  <Text fontSize={14} fontWeight="700">{coins}</Text>
-                </XStack>
-                <YStack w={42} h={42} br={14} ai="center" jc="center" bg="$gray3">
-                  <Ionicons name="notifications" size={20} color={isDark ? '#e5e7eb' : '#374151'} />
-                  <Circle size={8} bg="$red9" position="absolute" top={8} right={8} />
-                </YStack>
-              </XStack>
-            </XStack>
-          </Animated.View>
-
-          {/* Streak */}
-          <Animated.View entering={FadeInDown.delay(150).springify()}>
-            <StreakCalendar 
-              currentStreak={currentStreak}
-              longestStreak={longestStreak}
-            />
-          </Animated.View>
-
-          {/* Play Quiz */}
-          <YStack gap="$3">
-            <Animated.View entering={FadeInDown.delay(300)}>
-              <Text fontSize={18} fontWeight="800">⚔️ Play Quiz</Text>
-            </Animated.View>
-
-            {/* Mode Selector */}
-            <Animated.View entering={FadeInDown.delay(320)}>
-              <XStack gap="$3">
-                {modes.map((mode) => (
-                  <Pressable 
-                    key={mode.key} 
-                    onPress={() => onModeSelect(mode.key)}
-                    style={{ flex: 1 }}
-                  >
-                    <YStack
-                      p="$3"
-                      br={16}
-                      ai="center"
-                      gap="$2"
-                      bg={selectedMode === mode.key ? (isDark ? '$gray2' : '#fff') : '$gray3'}
-                      style={selectedMode === mode.key ? {
-                        borderWidth: 2,
-                        borderColor: mode.color,
-                        shadowColor: mode.color,
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 12
-                      } : { borderWidth: 2, borderColor: 'transparent' }}
-                    >
-                      <Circle size={44} bg={selectedMode === mode.key ? mode.color : '$gray5'}>
-                        <Ionicons 
-                          name={mode.icon as any} 
-                          size={22} 
-                          color={selectedMode === mode.key ? '#fff' : isDark ? '#9ca3af' : '#6b7280'} 
-                        />
-                      </Circle>
-                      <Text fontSize={14} fontWeight="700">{mode.label}</Text>
-                      <Text fontSize={11} color="$gray10">{mode.time}</Text>
-                    </YStack>
-                  </Pressable>
-                ))}
-              </XStack>
-            </Animated.View>
-
-            {/* Play Type Selector */}
-            <Animated.View entering={FadeInDown.delay(360)}>
-              <Card>
-                <YStack gap="$3">
-                  <Text fontSize={13} color="$gray10" fontWeight="600">Play with</Text>
-                  <XStack gap="$2">
-                    {[
-                      { key: 'solo' as const, label: 'Solo', icon: 'person' },
-                      { key: 'friends' as const, label: 'Friends', icon: 'people' },
-                      { key: 'random' as const, label: 'Random', icon: 'shuffle' }
-                    ].map((type) => (
-                      <Pressable 
-                        key={type.key} 
-                        onPress={() => onPlayTypeSelect(type.key)}
-                        style={{ flex: 1 }}
-                      >
-                        <XStack
-                          ai="center" jc="center" gap="$2"
-                          py="$3" br={12}
-                          bg={playType === type.key ? selectedModeData.color : '$gray4'}
-                        >
-                          <Ionicons 
-                            name={type.icon as any} 
-                            size={16} 
-                            color={playType === type.key ? '#fff' : isDark ? '#9ca3af' : '#6b7280'} 
-                          />
-                          <Text 
-                            fontSize={13} 
-                            fontWeight="600"
-                            color={playType === type.key ? '#fff' : '$gray11'}
-                          >
-                            {type.label}
-                          </Text>
-                        </XStack>
-                      </Pressable>
-                    ))}
-                  </XStack>
-                  
-                  <XStack ai="center" gap="$2" mt="$1">
-                    <Ionicons name="information-circle" size={16} color={selectedModeData.color} />
-                    <Text fontSize={13} color="$gray10">
-                      {selectedModeData.questions} questions • {selectedModeData.desc}
-                    </Text>
-                  </XStack>
-                </YStack>
-              </Card>
-            </Animated.View>
-
-            {/* Custom Topic Toggle */}
-            <Animated.View entering={FadeInDown.delay(380)}>
-              <Pressable onPress={onToggleCustomTopic}>
-                <XStack
-                  ai="center"
-                  jc="space-between"
-                  p="$3.5"
-                  br={16}
-                  bg={isDark ? '$gray2' : '#fff'}
+          {/* Hero Section - Level Badge + XP Progress */}
+          <YStack px="$4" gap="$4">
+            {/* Compact Level Badge */}
+            <XStack 
+              bg={isDark ? '#0f0f0f' : '#fafafa'}
+              p="$4"
+              br={24}
+              ai="center"
+              jc="space-between"
+              borderWidth={1}
+              borderColor={isDark ? '#1a1a1a' : '#f0f0f0'}
+              shadowColor="#000"
+              shadowOffset={{ width: 0, height: 4 }}
+              shadowOpacity={isDark ? 0.3 : 0.06}
+              shadowRadius={12}
+              elevation={6}
+            >
+              <XStack ai="center" gap="$4" flex={1}>
+                <LinearGradient
+                  colors={isDark ? ['#ffffff', '#d4d4d4'] : ['#0a0a0a', '#404040']}
                   style={{
-                    borderWidth: 2,
-                    borderColor: customTopicEnabled ? selectedModeData.color : 'transparent',
-                    shadowColor: customTopicEnabled ? selectedModeData.color : '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: customTopicEnabled ? 0.25 : 0.1,
-                    shadowRadius: 8,
+                    width: 72,
+                    height: 72,
+                    borderRadius: 36,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  <XStack ai="center" gap="$3" f={1}>
-                    <YStack
-                      w={40}
-                      h={40}
-                      br={10}
-                      ai="center"
-                      jc="center"
-                      bg={customTopicEnabled ? `${selectedModeData.color}20` : '$gray4'}
+                  <YStack ai="center">
+                    <Text 
+                      fontSize={10} 
+                      color={isDark ? '#0a0a0a' : '#ffffff'} 
+                      fontFamily="Nunito_700Bold"
+                      opacity={0.8}
                     >
-                      <Ionicons 
-                        name="list" 
-                        size={20} 
-                        color={customTopicEnabled ? selectedModeData.color : (isDark ? '#9ca3af' : '#6b7280')} 
-                      />
-                    </YStack>
-                    <YStack f={1}>
-                      <Text fontSize={15} fontWeight="700">Custom Topics</Text>
-                      <Text fontSize={12} color="$gray10">
-                        {customTopicEnabled 
-                          ? selectedTopics.length > 0 
-                            ? `${selectedTopics.length} topic${selectedTopics.length > 1 ? 's' : ''} selected`
-                            : 'Tap to select topics'
-                          : 'Random questions from all topics'
-                        }
-                      </Text>
-                    </YStack>
-                  </XStack>
-                  <YStack
-                    w={24}
-                    h={24}
-                    br={12}
-                    ai="center"
-                    jc="center"
-                    bg={customTopicEnabled ? selectedModeData.color : '$gray5'}
-                  >
-                    <Ionicons 
-                      name={customTopicEnabled ? 'checkmark' : 'close'} 
-                      size={14} 
-                      color="#fff" 
-                    />
+                      LVL
+                    </Text>
+                    <Text 
+                      fontSize={28} 
+                      color={isDark ? '#0a0a0a' : '#ffffff'} 
+                      fontFamily="Nunito_900Black"
+                      lineHeight={28}
+                    >
+                      {userStats.level}
+                    </Text>
                   </YStack>
-                </XStack>
-              </Pressable>
-            </Animated.View>
+                </LinearGradient>
 
-            {/* Topic Selection Button (when custom enabled) */}
-            {customTopicEnabled && (
-              <Animated.View entering={FadeInDown.delay(390)}>
-                <Pressable onPress={() => setShowTopicSheet(true)}>
-                  <YStack
-                    p="$3"
-                    br={14}
-                    bg={`${selectedModeData.color}15`}
-                    style={{ borderWidth: 1, borderColor: `${selectedModeData.color}40` }}
-                  >
-                    <XStack ai="center" jc="center" gap="$2">
-                      <Ionicons name="add-circle" size={18} color={selectedModeData.color} />
-                      <Text fontSize={14} fontWeight="700" style={{ color: selectedModeData.color }}>
-                        {selectedTopics.length > 0 ? 'Change Topics' : 'Select Topics'}
+                <YStack flex={1} gap="$2">
+                  <XStack jc="space-between" ai="center">
+                    <Text 
+                      fontSize={16} 
+                      fontFamily="Nunito_800ExtraBold" 
+                      color={isDark ? '#ffffff' : '#0a0a0a'}
+                    >
+                      Level {userStats.level + 1}
+                    </Text>
+                    <XStack ai="center" gap="$1">
+                      <MaterialCommunityIcons name="star-four-points" size={14} color="#f59e0b" />
+                      <Text 
+                        fontSize={14} 
+                        fontFamily="Nunito_800ExtraBold" 
+                        color={isDark ? '#ffffff' : '#0a0a0a'}
+                      >
+                        {userStats.xp} XP
                       </Text>
+                    </XStack>
+                  </XStack>
+
+                  <YStack gap="$1">
+                    <View 
+                      style={{ 
+                        height: 8, 
+                        backgroundColor: isDark ? '#262626' : '#e5e5e5', 
+                        borderRadius: 4, 
+                        overflow: 'hidden' 
+                      }}
+                    >
+                      <LinearGradient
+                        colors={isDark ? ['#ffffff', '#d4d4d4'] : ['#0a0a0a', '#404040']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ 
+                          width: `${xpProgress}%`, 
+                          height: '100%', 
+                          borderRadius: 4 
+                        }}
+                      />
+                    </View>
+                    <Text 
+                      fontSize={11} 
+                      color={isDark ? '#737373' : '#a3a3a3'} 
+                      fontFamily="Nunito_600SemiBold"
+                    >
+                      {userStats.xpToNextLevel} XP to next level • {xpProgress}%
+                    </Text>
+                  </YStack>
+                </YStack>
+              </XStack>
+
+              <Ionicons name="trophy" size={20} color="#f59e0b" style={{ marginLeft: 12 }} />
+            </XStack>
+
+            {/* Quiz Mode Selector + Start Button */}
+            <YStack 
+              bg={isDark ? '#0f0f0f' : '#fafafa'}
+              p="$4"
+              br={24}
+              borderWidth={1}
+              borderColor={isDark ? '#1a1a1a' : '#f0f0f0'}
+              gap="$4"
+              shadowColor="#000"
+              shadowOffset={{ width: 0, height: 6 }}
+              shadowOpacity={isDark ? 0.4 : 0.08}
+              shadowRadius={16}
+              elevation={8}
+            >
+              <Text 
+                fontSize={18} 
+                fontFamily="Nunito_800ExtraBold" 
+                color={isDark ? '#ffffff' : '#0a0a0a'}
+              >
+                Choose Quiz Mode
+              </Text>
+
+              {/* Mode Pills */}
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {quizModes.map((mode) => {
+                  const isSelected = selectedMode === mode.type;
+                  return (
+                    <Pressable
+                      key={mode.type}
+                      onPress={() => handleModeSelect(mode.type)}
+                    >
+                      <XStack
+                        ai="center"
+                        gap="$2"
+                        px="$3"
+                        py="$2.5"
+                        br={16}
+                        bg={isSelected ? mode.color : (isDark ? '#1a1a1a' : '#f5f5f5')}
+                        borderWidth={1}
+                        borderColor={isSelected ? mode.color : (isDark ? '#262626' : '#e5e5e5')}
+                      >
+                        <MaterialCommunityIcons 
+                          name={mode.icon as any}
+                          size={18} 
+                          color={isSelected ? '#ffffff' : mode.color} 
+                        />
+                        <Text 
+                          fontSize={13} 
+                          fontFamily="Nunito_700Bold"
+                          color={isSelected ? '#ffffff' : (isDark ? '#ffffff' : '#0a0a0a')}
+                        >
+                          {mode.title}
+                        </Text>
+                      </XStack>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Start Button */}
+              <Button
+                size="$5"
+                bg={isDark ? '#ffffff' : '#0a0a0a'}
+                color={isDark ? '#0a0a0a' : '#ffffff'}
+                pressStyle={{ bg: isDark ? '#f5f5f5' : '#1a1a1a', scale: 0.98 }}
+                onPress={handleStartQuiz}
+                h={56}
+                br={18}
+                shadowColor={isDark ? '#ffffff' : '#000'}
+                shadowOpacity={0.3}
+                shadowRadius={12}
+                elevation={8}
+                icon={<MaterialCommunityIcons name="play" size={24} color={isDark ? '#0a0a0a' : '#ffffff'} />}
+              >
+                <Text 
+                  fontSize={18} 
+                  color={isDark ? '#0a0a0a' : '#ffffff'} 
+                  fontFamily="Nunito_800ExtraBold"
+                >
+                  Start Practice
+                </Text>
+              </Button>
+            </YStack>
+          </YStack>
+
+          {/* Enhanced Stats Cards */}
+          <YStack px="$4" gap="$3">
+            <Text 
+              fontSize={20} 
+              fontFamily="Nunito_900Black" 
+              color={isDark ? '#ffffff' : '#0a0a0a'}
+              letterSpacing={-0.5}
+            >
+              Your Progress
+            </Text>
+
+            <XStack gap="$3">
+              <EnhancedStatCard
+                icon="fire"
+                value={userStats.streak}
+                label="Day Streak"
+                color="#ef4444"
+                trend="+2"
+                isDark={isDark}
+              />
+              <EnhancedStatCard
+                icon="target"
+                value={`${userStats.accuracy}%`}
+                label="Accuracy"
+                color="#10b981"
+                trend="+5%"
+                isDark={isDark}
+              />
+            </XStack>
+
+            <XStack gap="$3">
+              <EnhancedStatCard
+                icon="trophy-outline"
+                value={userStats.quizzesCompleted}
+                label="Quizzes"
+                color="#f59e0b"
+                trend="+12"
+                isDark={isDark}
+              />
+              <EnhancedStatCard
+                icon="clock-outline"
+                value="2.4h"
+                label="Study Time"
+                color="#06b6d4"
+                trend="+30m"
+                isDark={isDark}
+              />
+            </XStack>
+          </YStack>
+
+          {/* Focus Areas */}
+          <YStack px="$4" gap="$4" mt="$2">
+            <XStack jc="space-between" ai="center">
+              <Text 
+                fontSize={20} 
+                fontFamily="Nunito_900Black" 
+                color={isDark ? '#ffffff' : '#0a0a0a'}
+                letterSpacing={-0.5}
+              >
+                Focus Areas
+              </Text>
+              <Text 
+                fontSize={14} 
+                color={isDark ? '#a3a3a3' : '#737373'} 
+                fontFamily="Nunito_700Bold"
+              >
+                Improve These
+              </Text>
+            </XStack>
+
+            <YStack gap="$3">
+              {[
+                { topic: 'Indian Polity', accuracy: 48, questions: 42 },
+                { topic: 'Modern History', accuracy: 52, questions: 35 },
+                { topic: 'Geography', accuracy: 55, questions: 28 },
+                { topic: 'Economy', accuracy: 58, questions: 31 },
+              ].map((item) => (
+                <Pressable
+                  key={item.topic}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                  }}
+                >
+                  <YStack
+                    bg={isDark ? '#0f0f0f' : '#fafafa'}
+                    p="$4"
+                    br={20}
+                    borderWidth={1}
+                    borderColor={isDark ? '#1a1a1a' : '#f0f0f0'}
+                    gap="$3"
+                    shadowColor="#000"
+                    shadowOffset={{ width: 0, height: 4 }}
+                    shadowOpacity={isDark ? 0.3 : 0.06}
+                    shadowRadius={12}
+                    elevation={6}
+                  >
+                    <XStack jc="space-between" ai="center">
+                      <YStack gap="$1" flex={1}>
+                        <Text 
+                          fontSize={17} 
+                          fontFamily="Nunito_800ExtraBold" 
+                          color={isDark ? '#ffffff' : '#0a0a0a'}
+                        >
+                          {item.topic}
+                        </Text>
+                        <Text 
+                          fontSize={13} 
+                          color="#ef4444" 
+                          fontFamily="Nunito_700Bold"
+                        >
+                          {item.accuracy}% Accuracy • {item.questions} Questions
+                        </Text>
+                      </YStack>
+                      <View
+                        style={{
+                          backgroundColor: '#ef4444',
+                          paddingHorizontal: 16,
+                          paddingVertical: 10,
+                          borderRadius: 14,
+                        }}
+                      >
+                        <Text 
+                          color="white" 
+                          fontSize={13} 
+                          fontFamily="Nunito_800ExtraBold"
+                        >
+                          Practice
+                        </Text>
+                      </View>
                     </XStack>
                   </YStack>
                 </Pressable>
-              </Animated.View>
-            )}
-
-            {/* Start Button */}
-            <Animated.View entering={FadeInDown.delay(400)}>
-              <Pressable onPress={onStartQuiz}>
-                <YStack 
-                  h={56} br={16} 
-                  ai="center" jc="center"
-                  overflow="hidden"
-                  style={{
-                    shadowColor: selectedModeData.color,
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 16
-                  }}
-                >
-                  <LinearGradient
-                    colors={selectedModeData.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{ position: 'absolute', width: '100%', height: '100%' }}
-                  />
-                  <XStack ai="center" gap="$2">
-                    <Ionicons name="play" size={20} color="#fff" />
-                    <Text fontSize={17} fontWeight="800" color="#fff">
-                      Start {selectedModeData.label} Quiz
-                    </Text>
-                  </XStack>
-                </YStack>
-              </Pressable>
-            </Animated.View>
+              ))}
+            </YStack>
           </YStack>
 
+          {/* Streak Calendar */}
+          <YStack px="$4" mt="$6" gap="$4">
+            <XStack jc="space-between" ai="center">
+              <Text 
+                fontSize={20} 
+                fontFamily="Nunito_900Black" 
+                color={isDark ? '#ffffff' : '#0a0a0a'}
+                letterSpacing={-0.5}
+              >
+                Your Streak Journey
+              </Text>
+              <Text 
+                fontSize={14} 
+                color={isDark ? '#a3a3a3' : '#737373'} 
+                fontFamily="Nunito_700Bold"
+              >
+                View All
+              </Text>
+            </XStack>
+            <StreakCalendar currentStreak={userStats.streak} />
+          </YStack>
         </YStack>
       </ScrollView>
+    </SafeAreaView>
+  );
+}
 
-      {/* Topic Selection Sheet */}
-      <Sheet
-        modal
-        open={showTopicSheet}
-        onOpenChange={setShowTopicSheet}
-        snapPoints={[85]}
-        dismissOnSnapToBottom
-      >
-        <Sheet.Overlay animation="lazy" enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} />
-        <Sheet.Frame bg={isDark ? '$gray1' : '#fff'} br={24}>
-          <Sheet.Handle bg="$gray8" />
-          <YStack p="$4" gap="$4">
-            {/* Header */}
-            <YStack gap="$2">
-              <Text fontSize={24} fontWeight="900">Select Topics</Text>
-              <Text fontSize={14} color="$gray10">
-                Choose topics for your custom quiz
-              </Text>
-            </YStack>
+// Enhanced Stat Card with Trend
+function EnhancedStatCard({ icon, value, label, color, trend, isDark }: any) {
+  return (
+    <YStack
+      flex={1}
+      bg={isDark ? '#0f0f0f' : '#fafafa'}
+      p="$4"
+      br={20}
+      gap="$3"
+      borderWidth={1}
+      borderColor={isDark ? '#1a1a1a' : '#f0f0f0'}
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.3 : 0.06,
+        shadowRadius: 12,
+        elevation: 6,
+        minHeight: 120,
+      }}
+    >
+      <XStack jc="space-between" ai="flex-start">
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: `${color}15`,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <MaterialCommunityIcons name={icon as any} size={24} color={color} />
+        </View>
 
-            {/* Topics Grid */}
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <YStack gap="$3" pb="$4">
-                {quizTopics.map((topic, index) => {
-                  const isSelected = selectedTopics.includes(topic.id)
-                  return (
-                    <Animated.View key={topic.id} entering={FadeInDown.delay(100 + index * 50)}>
-                      <Pressable onPress={() => onSelectTopic(topic.id)}>
-                        <XStack
-                          ai="center"
-                          gap="$3"
-                          p="$3.5"
-                          br={16}
-                          bg={isSelected ? `${topic.color}15` : (isDark ? '$gray2' : '#f9fafb')}
-                          style={{
-                            borderWidth: 2,
-                            borderColor: isSelected ? topic.color : 'transparent',
-                          }}
-                        >
-                          <YStack
-                            w={48}
-                            h={48}
-                            br={12}
-                            ai="center"
-                            jc="center"
-                            bg={isSelected ? topic.color : '$gray4'}
-                          >
-                            <Ionicons name={topic.icon as any} size={24} color="#fff" />
-                          </YStack>
-                          <YStack f={1}>
-                            <Text fontSize={16} fontWeight="700">{topic.title}</Text>
-                          </YStack>
-                          {isSelected && (
-                            <YStack
-                              w={28}
-                              h={28}
-                              br={14}
-                              ai="center"
-                              jc="center"
-                              bg={topic.color}
-                            >
-                              <Ionicons name="checkmark" size={16} color="#fff" />
-                            </YStack>
-                          )}
-                        </XStack>
-                      </Pressable>
-                    </Animated.View>
-                  )
-                })}
-              </YStack>
-            </ScrollView>
+        <XStack 
+          bg={`${color}15`}
+          px="$2" 
+          py="$1" 
+          br={8}
+          ai="center"
+          gap="$1"
+        >
+          <MaterialCommunityIcons name="trending-up" size={12} color={color} />
+          <Text 
+            fontSize={11} 
+            fontFamily="Nunito_800ExtraBold" 
+            color={color}
+          >
+            {trend}
+          </Text>
+        </XStack>
+      </XStack>
 
-            {/* Action Buttons */}
-            <XStack gap="$3">
-              <Pressable onPress={() => setShowTopicSheet(false)} style={{ flex: 1 }}>
-                <YStack
-                  h={52}
-                  br={14}
-                  ai="center"
-                  jc="center"
-                  bg="$gray4"
-                >
-                  <Text fontSize={15} fontWeight="700" color="$gray11">Cancel</Text>
-                </YStack>
-              </Pressable>
-              <Pressable 
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                  setShowTopicSheet(false)
-                }} 
-                style={{ flex: 1 }}
-              >
-                <YStack
-                  h={52}
-                  br={14}
-                  ai="center"
-                  jc="center"
-                  overflow="hidden"
-                >
-                  <LinearGradient
-                    colors={selectedModeData.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{ position: 'absolute', width: '100%', height: '100%' }}
-                  />
-                  <Text fontSize={15} fontWeight="800" color="#fff">
-                    Done ({selectedTopics.length})
-                  </Text>
-                </YStack>
-              </Pressable>
-            </XStack>
-          </YStack>
-        </Sheet.Frame>
-      </Sheet>
+      <YStack gap="$1">
+        <Text 
+          fontSize={28} 
+          fontFamily="Nunito_900Black" 
+          color={isDark ? '#ffffff' : '#0a0a0a'}
+        >
+          {value}
+        </Text>
+        <Text 
+          fontSize={13} 
+          color={isDark ? '#737373' : '#a3a3a3'} 
+          fontFamily="Nunito_700Bold"
+        >
+          {label}
+        </Text>
+      </YStack>
     </YStack>
-  )
+  );
 }
