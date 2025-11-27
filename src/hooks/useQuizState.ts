@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { Audio as ExpoAudio } from 'expo-av';
 import { useState } from 'react';
 
 export interface Question {
@@ -35,8 +36,22 @@ export const useQuizState = (questions: Question[]) => {
         setIsCorrect(correct);
         setHasAnswered(true);
 
+        // Play Sound
+        try {
+            const { sound } = await ExpoAudio.Sound.createAsync(
+                correct
+                    ? require('../../assets/audio/correct.mp3')
+                    : require('../../assets/audio/incorrect.mp3')
+            );
+            await sound.playAsync();
+        } catch (error) {
+            console.error('Error playing sound:', error);
+        }
+
+        // Strong Haptic Feedback
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
         if (correct) {
-            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setScore(prev => prev + 1);
         } else {
             await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -52,8 +67,9 @@ export const useQuizState = (questions: Question[]) => {
             setQuestionFeedback(null);
             setShowFeedbackOptions(false);
             setFeedbackReason(null);
+            return false;
         }
-        return currentQuestionIndex >= totalQuestions - 1;
+        return true; // Indicates last question
     };
 
     const handleFeedback = async (type: 'like' | 'dislike') => {
