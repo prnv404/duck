@@ -52,7 +52,7 @@ export default function LevelProgressCard({ level, xp, xpToNextLevel, xpProgress
                 style={{ borderRadius: 28, padding: 1.5 }} // Create a border via padding
             >
                 <LinearGradient
-                    colors={cardBg}
+                    colors={cardBg as any}
                     style={{
                         padding: 16,
                         borderRadius: 27,
@@ -65,7 +65,7 @@ export default function LevelProgressCard({ level, xp, xpToNextLevel, xpProgress
                         <Stack>
                             <Animated.View entering={ZoomIn.delay(300).springify()}>
                                 <LinearGradient
-                                    colors={accentGradient}
+                                    colors={accentGradient as any}
                                     style={{
                                         width: 80,
                                         height: 80,

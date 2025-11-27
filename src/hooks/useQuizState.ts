@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { Audio as ExpoAudio } from 'expo-av';
-import { useState } from 'react';
+import { Audio as ExpoAvAudio } from 'expo-av';
+import { useState, useEffect, useRef } from 'react';
 
 export interface Question {
     id: number;
@@ -18,6 +18,51 @@ export const useQuizState = (questions: Question[]) => {
     const [questionFeedback, setQuestionFeedback] = useState<'like' | 'dislike' | null>(null);
     const [showFeedbackOptions, setShowFeedbackOptions] = useState(false);
     const [feedbackReason, setFeedbackReason] = useState<string | null>(null);
+
+    // Refs to hold sound objects
+    const correctSoundRef = useRef<ExpoAvAudio.Sound | null>(null);
+    const incorrectSoundRef = useRef<ExpoAvAudio.Sound | null>(null);
+
+    // Configure Audio Mode and Preload Sounds
+    useEffect(() => {
+        const setupAudio = async () => {
+            try {
+                // 1. Configure Audio Mode
+                await ExpoAvAudio.setAudioModeAsync({
+                    playsInSilentModeIOS: true,
+                    staysActiveInBackground: false,
+                    shouldDuckAndroid: true,
+                    playThroughEarpieceAndroid: false,
+                });
+
+                // 2. Preload Sounds
+                const { sound: correctSound } = await ExpoAvAudio.Sound.createAsync(
+                    require('../../assets/audio/correct.mp3')
+                );
+                correctSoundRef.current = correctSound;
+
+                const { sound: incorrectSound } = await ExpoAvAudio.Sound.createAsync(
+                    require('../../assets/audio/incorrect.mp3')
+                );
+                incorrectSoundRef.current = incorrectSound;
+
+            } catch (error) {
+                console.error('Error setting up audio:', error);
+            }
+        };
+
+        setupAudio();
+
+        // Cleanup: Unload sounds on unmount
+        return () => {
+            if (correctSoundRef.current) {
+                correctSoundRef.current.unloadAsync();
+            }
+            if (incorrectSoundRef.current) {
+                incorrectSoundRef.current.unloadAsync();
+            }
+        };
+    }, []);
 
     const currentQuestion = questions[currentQuestionIndex];
     const totalQuestions = questions.length;
@@ -38,12 +83,11 @@ export const useQuizState = (questions: Question[]) => {
 
         // Play Sound
         try {
-            const { sound } = await ExpoAudio.Sound.createAsync(
-                correct
-                    ? require('../../assets/audio/correct.mp3')
-                    : require('../../assets/audio/incorrect.mp3')
-            );
-            await sound.playAsync();
+            const soundToPlay = correct ? correctSoundRef.current : incorrectSoundRef.current;
+            if (soundToPlay) {
+                // Reset to start before playing to allow replay
+                await soundToPlay.replayAsync();
+            }
         } catch (error) {
             console.error('Error playing sound:', error);
         }

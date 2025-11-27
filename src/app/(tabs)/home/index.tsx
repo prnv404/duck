@@ -126,22 +126,25 @@ export default function HomeScreen() {
 
           {/* Quiz Mode Selector - 2x2 Grid */}
           <QuizModeSelector
-            selectedMode={selectedMode}
+            selectedMode={selectedMode as any}
             onModeSelect={setSelectedMode}
             onStartQuiz={handleStartQuiz}
             isDark={isDark}
           />
 
-          {/* Progress Stats */}
+
+          {/* Focus Areas */}
+          <FocusAreas currentStreak={userStats.streak} isDark={isDark} />
+
+          
+          {/* Progress Stats
           <ProgressStats
             streak={userStats.streak}
             accuracy={userStats.accuracy}
             quizzesCompleted={userStats.quizzesCompleted}
             isDark={isDark}
-          />
+          /> */}
 
-          {/* Focus Areas */}
-          <FocusAreas currentStreak={userStats.streak} isDark={isDark} />
         </YStack>
       </ScrollView>
 
