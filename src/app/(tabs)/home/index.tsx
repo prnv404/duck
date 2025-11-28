@@ -95,7 +95,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <YStack f={1} bg={isDark ? '#1a1717ff' : '#fafef9ff'}>
+    <YStack f={1} bg={isDark ? '#090808ff' : '#fafef9ff'}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{

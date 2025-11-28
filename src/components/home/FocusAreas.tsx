@@ -2,7 +2,7 @@ import StreakCalendar from '@/components/StreakCalendar';
 import * as Haptics from 'expo-haptics';
 import { Pressable, ScrollView, Alert } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface FocusAreasProps {
@@ -16,127 +16,132 @@ const subjectData = [
     { id: 'geography', name: 'Geography', accuracy: 78, status: 'Strong', color: '#10b981', icon: 'earth' },
     { id: 'economy', name: 'Economy', accuracy: 55, status: 'Average', color: '#f59e0b', icon: 'chart-line' },
     { id: 'science', name: 'Science', accuracy: 85, status: 'Strong', color: '#06b6d4', icon: 'flask' },
-].sort(() => Math.random() - 0.5);
+].sort((a, b) => a.accuracy - b.accuracy); // Sort Weakest first (Action priority)
 
 export default function FocusAreas({ currentStreak, isDark }: FocusAreasProps) {
+    
     const handleSubjectPress = (subject: typeof subjectData[0]) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        Alert.alert("Start Practice", `Start practicing ${subject.name}?`);
+        Alert.alert("Session Started", `Initializing practice module for ${subject.name}...`);
     };
 
-    // Simplified shadow for minimalism
-    const cardShadow = isDark 
-        ? { shadowOpacity: 0.2, shadowRadius: 8, shadowColor: '#000' } 
-        : { shadowOpacity: 0.08, shadowRadius: 6, shadowColor: '#000' };
+    const textMain = isDark ? '#ffffff' : '#0f172a';
+    const textSub = isDark ? '#a3a3a3' : '#64748b';
+    const cardBg = isDark ? '#171717' : '#ffffff';
+    const borderColor = isDark ? '#262626' : '#f1f5f9';
 
     return (
-        <YStack gap="$5" mt="$4"> {/* Slightly reduced gap */}
+        <YStack gap="$5" mt="$4">
+            
             <Animated.View entering={FadeInDown.delay(1200)}>
-                <XStack jc="space-between" ai="center">
+                <XStack jc="space-between" ai="flex-end" mb="$2">
                     <YStack>
-                        <Text fontSize={19} fontFamily="Nunito_900Black" color={isDark ? '#ffffff' : '#0a0a0a'} letterSpacing={-0.5}>
-                            Subject Mastery
+                        <Text fontSize={20} fontFamily="Nunito_900Black" color={textMain} letterSpacing={-0.5}>
+                            Focus Areas
                         </Text>
-                        <Text fontSize={12} color={isDark ? '#a3a3a3' : '#737373'} fontFamily="Nunito_600SemiBold">
-                            Tap a card to improve
+                        <Text fontSize={13} color={textSub} fontFamily="Nunito_600SemiBold" mt="$1">
+                            Prioritized by your weakest topics
                         </Text>
                     </YStack>
                 </XStack>
             </Animated.View>
 
-            {/* Horizontal Scrollable Mastery Cards */}
-            <Animated.View entering={FadeIn.delay(1300)}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 4, paddingBottom: 8, gap: 12 }} // Reduced paddingBottom
-                >
-                    {subjectData.map((item, index) => (
-                        <Animated.View key={item.id} entering={FadeInDown.delay(1300 + index * 100)}>
-                            <Pressable onPress={() => handleSubjectPress(item)}>
-                                <YStack
-                                    w={130} // Slightly reduced width
-                                    h={160} // Slightly reduced height
-                                    bg={isDark ? '#1a1a1a' : '#ffffff'}
-                                    br={16} // Slightly smaller radius
-                                    p="$3"
-                                    jc="space-between"
-                                    style={{
-                                        ...cardShadow,
-                                        shadowOffset: { width: 0, height: 2 }, // Reduced offset
-                                        elevation: 3, // Reduced elevation
-                                        borderWidth: 1,
-                                        borderColor: isDark ? '#262626' : '#f0f0f0'
-                                    }}
+            {/* Vertical Action List */}
+            <YStack gap="$3.5">
+                {subjectData.map((item, index) => (
+                    <Animated.View 
+                        key={item.id} 
+                        entering={FadeInDown.delay(1300 + index * 100)}
+                        layout={Layout.springify()}
+                    >
+                        <XStack 
+                            bg={cardBg}
+                            p="$3.5"
+                            br={20}
+                            ai="center"
+                            jc="space-between"
+                            borderWidth={1}
+                            borderColor={borderColor}
+                            style={{
+                                shadowColor: "#000",
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: isDark ? 0 : 0.03,
+                                shadowRadius: 8,
+                                elevation: isDark ? 0 : 2,
+                            }}
+                        >
+                            {/* LEFT SIDE: Subject Info & Analytics */}
+                            <XStack gap="$3.5" ai="center" flex={1}>
+                                {/* Icon Box */}
+                                <YStack 
+                                    w={44} h={44} br={14} 
+                                    bg={`${item.color}15`} // Very subtle background tint
+                                    ai="center" jc="center"
                                 >
-                                    {/* Header: Icon & Status */}
-                                    <XStack jc="space-between" ai="flex-start">
-                                        <YStack
-                                            w={32} h={32} br={10} // Smaller icon container
-                                            bg={`${item.color}10`} // More subtle tint
-                                            ai="center" jc="center"
-                                        >
-                                            <MaterialCommunityIcons name={item.icon as any} size={18} color={item.color} />
-                                        </YStack>
-                                        <YStack
-                                            px="$1.5" py="$0.5" br={6} // Compact badge
-                                            bg={item.status === 'Weak' ? '#ef444410' : item.status === 'Strong' ? '#10b98110' : '#f59e0b10'} // Subtler bg
-                                        >
-                                            <Text
-                                                fontSize={9} // Smaller text
-                                                fontFamily="Nunito_800ExtraBold"
-                                                color={item.status === 'Weak' ? '#ef4444' : item.status === 'Strong' ? '#10b981' : '#f59e0b'}
-                                            >
-                                                {item.status.toUpperCase()}
-                                            </Text>
-                                        </YStack>
-                                    </XStack>
+                                    <MaterialCommunityIcons name={item.icon as any} size={22} color={item.color} />
+                                </YStack>
 
-                                    {/* Middle: Subject Name & Score */}
-                                    <YStack gap="$1">
-                                        <Text fontSize={15} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0a0a0a'} numberOfLines={2}>
+                                {/* Text & Progress Bar */}
+                                <YStack flex={1} gap="$1.5">
+                                    <XStack jc="space-between" ai="center" mr="$4">
+                                        <Text fontSize={15} fontFamily="Nunito_800ExtraBold" color={textMain}>
                                             {item.name}
                                         </Text>
-                                        <Text fontSize={26} fontFamily="Nunito_900Black" color={item.color}> {/* Slightly reduced size */}
+                                        <Text fontSize={12} fontFamily="Nunito_700Bold" color={item.color}>
                                             {item.accuracy}%
                                         </Text>
-                                    </YStack>
-
-                                    {/* Bottom: Practice Button - Simplified */}
-                                    <XStack
-                                        bg={isDark ? '#262626' : '#f8fafc'} // Softer bg
-                                        py="$1.5" // Reduced padding
-                                        br={10}
-                                        jc="center"
-                                        ai="center"
-                                        gap="$1"
-                                        borderWidth={1}
-                                        borderColor={isDark ? '#333333' : '#e2e8f0'}
-                                    >
-                                        <Text fontSize={11} fontFamily="Nunito_700Bold" color={isDark ? '#e0e0e0' : '#475569'}>
-                                            Practice
-                                        </Text>
-                                        <MaterialCommunityIcons name="arrow-right" size={12} color={isDark ? '#e0e0e0' : '#475569'} />
+                                    </XStack>
+                                    
+                                    {/* Mini Progress Bar */}
+                                    <XStack h={5} bg={isDark ? '#333' : '#f1f5f9'} br={10} w="90%" overflow="hidden">
+                                        <YStack 
+                                            h="100%" 
+                                            bg={item.color} 
+                                            br={10} 
+                                            w={`${item.accuracy}%`} 
+                                            opacity={0.8}
+                                        />
                                     </XStack>
                                 </YStack>
+                            </XStack>
+
+                            {/* RIGHT SIDE: Explicit Action Button */}
+                            <Pressable 
+                                onPress={() => handleSubjectPress(item)}
+                                style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+                            >
+                                <YStack 
+                                    bg={isDark ? '#262626' : '#f8fafc'}
+                                    px="$3" 
+                                    py="$2.5" 
+                                    br={12}
+                                    borderWidth={1}
+                                    borderColor={isDark ? '#404040' : '#e2e8f0'}
+                                    ai="center"
+                                    jc="center"
+                                >
+                                    <MaterialCommunityIcons 
+                                        name="play" 
+                                        size={20} 
+                                        color={isDark ? '#ffffff' : '#0f172a'} 
+                                    />
+                                </YStack>
                             </Pressable>
-                        </Animated.View>
-                    ))}
-                </ScrollView>
+                        </XStack>
+                    </Animated.View>
+                ))}
+            </YStack>
+
+            {/* Streak Section */}
+            <Animated.View entering={FadeInDown.delay(1600)}>
+                <YStack mt="$2">
+                     <Text fontSize={19} fontFamily="Nunito_900Black" color={textMain} letterSpacing={-0.5} mb="$2">
+                        Consistency
+                    </Text>
+                    <StreakCalendar currentStreak={currentStreak} />
+                </YStack>
             </Animated.View>
 
-            {/* Streak Calendar */}
-            <Animated.View entering={FadeInDown.delay(1500)}>
-                <XStack jc="space-between" ai="center">
-                    <Text fontSize={19} fontFamily="Nunito_900Black" color={isDark ? '#ffffff' : '#0a0a0a'} letterSpacing={-0.5}>
-                        Your Streak Journey
-                    </Text>
-                    <Text fontSize={13} color={isDark ? '#a3a3a3' : '#737373'} fontFamily="Nunito_700Bold">
-                        View All
-                    </Text>
-                </XStack>
-                <StreakCalendar currentStreak={currentStreak} />
-            </Animated.View>
         </YStack>
     );
 }

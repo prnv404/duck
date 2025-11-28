@@ -13,43 +13,47 @@ import Animated, {
     withSpring,
     withTiming,
     Extrapolation,
-    interpolateColor
 } from 'react-native-reanimated';
 import { Text, XStack, YStack } from 'tamagui';
+
+// --------------------------------------------------------------------------------
+// --- Design System ---
+// --------------------------------------------------------------------------------
+
+const DESIGN_TOKENS = {
+    light: {
+        background: '#FFFFFF',
+        cardBg: '#F8F9FA',
+        border: '#E5E7EB',
+        textPrimary: '#111827',
+        textSecondary: '#6B7280',
+        accent: '#6366F1', // mode buttons (Indigo)
+        accentHover: '#4F46E5',
+        success: '#10B981',
+        muted: '#F3F4F6',
+    },
+    dark: {
+        background: '#0A0A0A',
+        cardBg: '#18181B',
+        border: '#27272A',
+        textPrimary: '#F9FAFB',
+        textSecondary: '#9CA3AF',
+        accent: '#6366F1', // mode buttons (Indigo)
+        accentHover: '#4F46E5',
+        success: '#10B981',
+        muted: '#1F1F23',
+    }
+};
 
 // --------------------------------------------------------------------------------
 // --- Data & Types ---
 // --------------------------------------------------------------------------------
 
 const quizModes = [
-    {
-        type: 'balanced',
-        icon: 'scale-balance',
-        title: 'Balanced',
-        description: 'A mix of topics and difficulty for general review.',
-        color: '#6366f1', // Indigo
-    },
-    {
-        type: 'adaptive',
-        icon: 'brain',
-        title: 'Adaptive',
-        description: 'Questions adjust difficulty based on your performance.',
-        color: '#8b5cf6', // Violet
-    },
-    {
-        type: 'weak_area',
-        icon: 'target',
-        title: 'Weak Areas',
-        description: 'Focuses on subjects where you need the most practice.',
-        color: '#ef4444', // Red
-    },
-    {
-        type: 'hard',
-        icon: 'fire',
-        title: 'Hardcore',
-        description: 'High difficulty, strict timer. For challenging your limits.',
-        color: '#dc2626', // Red-Dark
-    },
+    { type: 'balanced', icon: 'scale-balance', title: 'Balanced', description: 'A mix of topics and difficulty for general review.' },
+    { type: 'adaptive', icon: 'brain', title: 'Adaptive', description: 'Questions adjust difficulty based on your performance.' },
+    { type: 'weak_area', icon: 'target', title: 'Weak Areas', description: 'Focuses on subjects where you need the most practice.' },
+    { type: 'hard', icon: 'fire', title: 'Hardcore', description: 'High difficulty, strict timer. For challenging your limits.' },
 ] as const;
 
 type QuizModeType = typeof quizModes[number]['type'];
@@ -69,194 +73,173 @@ interface QuizModeSelectorProps {
 // --------------------------------------------------------------------------------
 
 export default function QuizModeSelector({ selectedMode, onModeSelect, onStartQuiz, isDark }: QuizModeSelectorProps) {
+    const theme = isDark ? DESIGN_TOKENS.dark : DESIGN_TOKENS.light;
+
     const handleModeSelect = (mode: QuizModeType) => {
         Haptics.selectionAsync();
         onModeSelect(mode);
     };
 
-    const cardBgColor = isDark ? '#14171aff' : '#fff';
-    const cardBorderColor = isDark ? '#262626' : '#e0e0e0';
-    const cardShadow = isDark 
-        ? { shadowOpacity: 0.3, shadowRadius: 12, shadowColor: '#000' } 
-        : { shadowOpacity: 0.08, shadowRadius: 8, shadowColor: '#000' };
-
     const currentMode = getSelectedModeDetails(selectedMode);
-    const descriptionKey = currentMode.type;
 
     return (
         <Animated.View entering={FadeInDown.delay(100).springify()}>
             <YStack
-                bg={cardBgColor}
-                p="$4"
-                br={20}
+                bg={theme.background}
+                p="$5"
+                br={24}
                 borderWidth={1}
-                borderColor={cardBorderColor}
-                gap="$4"
-                style={cardShadow}
+                borderColor={theme.border}
+                gap="$5"
+                shadowColor="#000"
+                shadowOffset={{ width: 0, height: 2 }}
+                shadowOpacity={isDark ? 0.5 : 0.1}
+                shadowRadius={16}
             >
-                <Text
-                    fontSize={20}
-                    fontFamily="Nunito_800ExtraBold"
-                    color={isDark ? '#e0e0e0' : '#1a1a1a'}
-                    textAlign="center"
-                >
-                    Select Your Training Mode
-                </Text>
+                {/* Header */}
+                <YStack gap="$2" ai="center">
+                    <Text fontSize={24} fontFamily="Nunito_800ExtraBold" color={theme.textPrimary} textAlign="center">
+                        Start your practice
+                    </Text>
+                    <Text fontSize={14} fontFamily="Nunito_600SemiBold" color={theme.textSecondary} textAlign="center">
+                        choose your mode and grind questions
+                    </Text>
+                </YStack>
 
-                {/* --- Mode Selector Grid --- */}
-                <YStack gap="$3">
-                    <XStack gap="$3">
+                {/* Swipe Button (Constrained Width and Centered) */}
+                <YStack width="100%" maxWidth={450} alignSelf="center">
+                    <SwipeButton onStart={onStartQuiz} theme={theme} />
+                </YStack>
+
+                {/* Mode Selection - Compact Grid */}
+                <YStack gap="$2.5">
+                    <XStack gap="$1.5">
                         {quizModes.slice(0, 2).map((mode, index) => (
-                            <ModePill 
-                                key={mode.type} 
-                                mode={mode} 
-                                isSelected={selectedMode === mode.type} 
-                                isDark={isDark} 
-                                handleSelect={handleModeSelect} 
-                                delay={100 + index * 100} 
+                            <ModePill
+                                key={mode.type}
+                                mode={mode}
+                                isSelected={selectedMode === mode.type}
+                                theme={theme}
+                                handleSelect={handleModeSelect}
+                                delay={100 + index * 50}
                             />
                         ))}
                     </XStack>
-                    <XStack gap="$3">
+                    <XStack gap="$1.5">
                         {quizModes.slice(2, 4).map((mode, index) => (
-                            <ModePill 
-                                key={mode.type} 
-                                mode={mode} 
-                                isSelected={selectedMode === mode.type} 
-                                isDark={isDark} 
-                                handleSelect={handleModeSelect} 
-                                delay={300 + index * 100} 
+                            <ModePill
+                                key={mode.type}
+                                mode={mode}
+                                isSelected={selectedMode === mode.type}
+                                theme={theme}
+                                handleSelect={handleModeSelect}
+                                delay={200 + index * 50}
                             />
                         ))}
                     </XStack>
                 </YStack>
-
-                {/* --- Description Panel --- */}
-                <Animated.View key={descriptionKey} entering={FadeIn.duration(400)}>
-                    <YStack
-                        p="$3"
-                        br={14}
-                        bg={isDark ? '#1a1a1a' : '#f5f5f5'}
-                        borderLeftWidth={4}
-                        borderColor={currentMode.color}
-                        gap="$1.5"
-                    >
-                        <XStack ai="center" gap="$2">
-                            <MaterialCommunityIcons name={currentMode.icon as any} size={16} color={currentMode.color} />
-                            <Text fontSize={15} fontFamily="Nunito_800ExtraBold" color={currentMode.color}>
-                                {currentMode.title}
-                            </Text>
-                        </XStack>
-                        <Text fontSize={12} color={isDark ? '#a3a3a3' : '#525252'} fontFamily="Nunito_600SemiBold">
-                            {currentMode.description}
-                        </Text>
-                    </YStack>
-                </Animated.View>
-
-                {/* --- Swipe To Start Button --- */}
-                <SwipeButton onStart={onStartQuiz} />
-
             </YStack>
         </Animated.View>
     );
 }
 
 // --------------------------------------------------------------------------------
-// --- Sub-Component: Swipe Button (Solid & Compact) ---
+// --- Sub-Component: Swipe Button (MODIFIED FOR UX) ---
 // --------------------------------------------------------------------------------
 
-const BUTTON_HEIGHT = 58;
-const PADDING = 5;
-const KNOB_SIZE = BUTTON_HEIGHT - (PADDING * 2);
+const BUTTON_HEIGHT = 64;
+const PADDING = 6;
+const KNOB_SIZE = BUTTON_HEIGHT - PADDING * 2;
 
-function SwipeButton({ onStart }: { onStart: () => void }) {
+// --- CUSTOMIZATION ---
+const BUTTON_RADIUS = 20;
+const KNOB_RADIUS = 20;
+
+const SWIPE_BG_COLOR = '#58cc02'; 
+const SWIPE_SUCCESS_COLOR = '#0b0c0cff';
+const SWIPE_ICON_COLOR = '#437901';
+
+// Reduced threshold for easier completion
+const SWIPE_COMPLETE_THRESHOLD = 0.5; // Only 50% of the drag distance is required
+
+function SwipeButton({ onStart, theme }: { onStart: () => void; theme: typeof DESIGN_TOKENS.light }) {
     const [containerWidth, setContainerWidth] = useState(0);
     const translateX = useSharedValue(0);
     const [isComplete, setIsComplete] = useState(false);
-    
-    // Calculate draggable area based on actual rendered width
-    const maxDrag = containerWidth > 0 ? containerWidth - KNOB_SIZE - (PADDING * 2) : 0;
+
+    const maxDrag = containerWidth > 0 ? containerWidth - KNOB_SIZE - PADDING * 2 : 0;
 
     const handleComplete = () => {
         setIsComplete(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onStart();
-        
-        // Reset logic: delay reset so user sees the "success" state briefly
+
         setTimeout(() => {
-             translateX.value = withSpring(0);
-             setIsComplete(false);
-        }, 1000);
+            // Reset state
+            translateX.value = withSpring(0);
+            setIsComplete(false);
+        }, 800);
     };
 
     const panGesture = Gesture.Pan()
         .onUpdate((e) => {
             if (isComplete || maxDrag === 0) return;
-            // Clamp movement
+            // Constrain translation between 0 and maxDrag
             translateX.value = Math.min(Math.max(e.translationX, 0), maxDrag);
         })
         .onEnd(() => {
             if (isComplete || maxDrag === 0) return;
             
-            // Trigger point: 65% of the way
-            if (translateX.value > maxDrag * 0.65) {
+            // Check if the user swiped past the 50% threshold
+            if (translateX.value > maxDrag * SWIPE_COMPLETE_THRESHOLD) {
+                // Animate to the *end* of the track for visual completion
                 translateX.value = withSpring(maxDrag, { damping: 14, stiffness: 100 });
                 runOnJS(handleComplete)();
             } else {
-                // Snap back
+                // Snap back to start
                 translateX.value = withSpring(0, { damping: 15, stiffness: 120 });
             }
         });
 
-    // --- Animated Styles ---
-    const knobStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: translateX.value }],
+    const knobStyle = useAnimatedStyle(() => ({ 
+        transform: [{ translateX: translateX.value }] 
     }));
-
-    const textStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(translateX.value, [0, maxDrag * 0.7], [1, 0], Extrapolation.CLAMP),
-        transform: [{ translateX: interpolate(translateX.value, [0, maxDrag], [0, 15], Extrapolation.CLAMP) }]
+    
+    const textStyle = useAnimatedStyle(() => ({ 
+        // Fade out text quickly as the knob moves
+        opacity: interpolate(
+            translateX.value, 
+            [0, maxDrag * SWIPE_COMPLETE_THRESHOLD * 0.5], // Hide text by 25% of max drag
+            [1, 0], 
+            Extrapolation.CLAMP
+        ) 
     }));
-
-    const trackAnimatedStyle = useAnimatedStyle(() => ({
-         backgroundColor: interpolateColor(
-             translateX.value, 
-             [0, maxDrag], 
-             ['#58cc02', '#5ce602'] // Main Green -> Slightly lighter green
-         )
+    
+    const trackStyle = useAnimatedStyle(() => ({
+        // Change track color when the threshold is met
+        backgroundColor: translateX.value > maxDrag * SWIPE_COMPLETE_THRESHOLD ? SWIPE_SUCCESS_COLOR : SWIPE_BG_COLOR,
     }));
-
+    
     const iconStyle = useAnimatedStyle(() => ({
-        transform: [
-            { rotate: `${interpolate(translateX.value, [0, maxDrag], [0, 360])}deg` },
-            { scale: interpolate(translateX.value, [maxDrag * 0.8, maxDrag], [1, 1.15], Extrapolation.CLAMP) }
-        ]
+        transform: [{ translateX: interpolate(translateX.value, [0, maxDrag], [0, 4], Extrapolation.CLAMP) }],
+        opacity: isComplete ? withTiming(0) : withTiming(1),
     }));
 
     return (
-        <GestureHandlerRootView style={{ width: '100%', alignItems: 'center' }}>
+        <GestureHandlerRootView style={{ width: '100%' }}>
             <GestureDetector gesture={panGesture}>
                 <Animated.View 
-                    style={[styles.trackSolid, trackAnimatedStyle]} 
+                    style={[styles.track, trackStyle]} 
                     onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
                 >
-                    {/* Background Text */}
                     <Animated.View style={[styles.textContainer, textStyle]}>
-                        <Text 
-                            fontFamily="Nunito_900Black" 
-                            fontSize={16} 
-                            color="white" 
-                            letterSpacing={1} 
-                            style={styles.textShadow}
-                        >
-                            SWIPE TO START {'>>'}
+                        <Text fontFamily="Nunito_800ExtraBold" fontSize={15} color="white" letterSpacing={0.5}>
+                            Swipe to start
                         </Text>
                     </Animated.View>
-
-                    {/* Draggable Knob */}
-                    <Animated.View style={[styles.knobSolid, knobStyle]}>
+                    <Animated.View style={[styles.knob, knobStyle]}>
                         <Animated.View style={iconStyle}>
-                            <MaterialCommunityIcons name="arrow-right" size={28} color="#3a7e0d" />
+                            <MaterialCommunityIcons name="arrow-right" size={24} color={SWIPE_ICON_COLOR} />
                         </Animated.View>
                     </Animated.View>
                 </Animated.View>
@@ -272,65 +255,54 @@ function SwipeButton({ onStart }: { onStart: () => void }) {
 interface ModePillProps {
     mode: typeof quizModes[number];
     isSelected: boolean;
-    isDark: boolean;
+    theme: typeof DESIGN_TOKENS.light;
     handleSelect: (mode: QuizModeType) => void;
     delay: number;
 }
 
-function ModePill({ mode, isSelected, isDark, handleSelect, delay }: ModePillProps) {
+function ModePill({ mode, isSelected, theme, handleSelect, delay }: ModePillProps) {
     const scale = useSharedValue(1);
 
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [{ scale: scale.value }],
-            ...(isSelected ? {
-                shadowColor: mode.color,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.4,
-                shadowRadius: 4,
-                elevation: 4,
-            } : {})
-        };
-    });
+    const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
     const handlePressIn = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        scale.value = withTiming(0.95, { duration: 150 });
+        scale.value = withTiming(0.95, { duration: 100 });
     };
 
     const handlePressOut = () => {
-        scale.value = withSpring(isSelected ? 1.02 : 1, { damping: 12, stiffness: 100 });
+        scale.value = withSpring(1, { damping: 12, stiffness: 150 });
         handleSelect(mode.type);
     };
 
-    const iconColor = isSelected ? '#fff' : mode.color;
-    const textColor = isSelected ? '#fff' : (isDark ? '#e0e0e0' : '#1a1a1a');
-    const bgColor = isSelected ? mode.color : (isDark ? '#1a1a1a' : '#f8f9fa');
-    const borderColor = isSelected ? 'transparent' : (isDark ? '#2a2a2a' : '#e5e7eb');
-
     return (
-        <Animated.View key={mode.type} entering={FadeIn.delay(delay)} style={{ flex: 1 }}>
-            <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-                <Pressable
-                    onPressIn={handlePressIn}
-                    onPressOut={handlePressOut}
-                    onPress={() => handleSelect(mode.type)}
-                >
+        <Animated.View entering={FadeIn.delay(delay)} style={{ flex: 1 }}>
+            <Animated.View style={animatedStyle}>
+                <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={() => handleSelect(mode.type)}>
                     <YStack
                         ai="center"
-                        gap="$1"
-                        px="$3.5"
-                        py="$2.5"
-                        br={12}
-                        bg={bgColor}
+                        jc="center"
+                        gap="$1.5"
+                        p="$3"
+                        br={16}
+                        bg={isSelected ? theme.accent : theme.cardBg}
                         borderWidth={isSelected ? 0 : 1}
-                        borderColor={borderColor}
-                        style={{ flex: 1 }}
+                        borderColor={theme.border}
+                        h={90}
                     >
-                        <MaterialCommunityIcons name={mode.icon as any} size={20} color={iconColor} />
-                        <Text fontSize={12} fontFamily={isSelected ? "Nunito_900Black" : "Nunito_700Bold"} color={textColor} textAlign="center">
+                        <YStack w={24} h={24} ai="center" jc="center" br={10} bg={isSelected ? 'rgba(255,255,255,0.2)' : theme.muted}>
+                            <MaterialCommunityIcons name={mode.icon as any} size={18} color={isSelected ? '#FFFFFF' : theme.accent} />
+                        </YStack>
+
+                        <Text fontSize={13} fontFamily="Nunito_800ExtraBold" color={isSelected ? '#FFFFFF' : theme.textPrimary} textAlign="center">
                             {mode.title}
                         </Text>
+
+                        {isSelected && (
+                            <Animated.View entering={FadeIn.duration(200)} style={{ position: 'absolute', top: 8, right: 8 }}>
+                                <MaterialCommunityIcons name="check-circle" size={16} color="#FFFFFF" />
+                            </Animated.View>
+                        )}
                     </YStack>
                 </Pressable>
             </Animated.View>
@@ -343,29 +315,13 @@ function ModePill({ mode, isSelected, isDark, handleSelect, delay }: ModePillPro
 // --------------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-    trackSolid: {
+    track: {
         height: BUTTON_HEIGHT,
-        // Reduced width from 100% to 92% per request
-        width: '92%', 
-        alignSelf: 'center',
-        marginTop: 8,
-        
-        borderRadius: BUTTON_HEIGHT / 2,
+        width: '100%',
+        borderRadius: BUTTON_RADIUS, 
         justifyContent: 'center',
         padding: PADDING,
         overflow: 'hidden',
-
-        // Solid Border Styling
-        borderWidth: 3,
-        borderBottomWidth: 5, // Thicker bottom for 3D effect
-        borderColor: '#3a7e0d', // Dark green border
-        
-        // Shadow/Depth
-        shadowColor: '#3a7e0d',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 5,
-        elevation: 8,
     },
     textContainer: {
         position: 'absolute',
@@ -374,29 +330,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1,
-        paddingLeft: KNOB_SIZE / 2, // Slight offset to visual center
     },
-    textShadow: {
-        textShadowColor: 'rgba(0,0,0,0.2)',
-        textShadowRadius: 2,
-        textShadowOffset: { width: 0, height: 1 }
-    },
-    knobSolid: {
+    knob: {
         height: KNOB_SIZE,
         width: KNOB_SIZE,
-        borderRadius: KNOB_SIZE / 2,
+        borderRadius: KNOB_RADIUS, 
         backgroundColor: 'white',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 2,
-        
-        // Knob Borders and Shadow
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3,
-        elevation: 5
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4,
     }
 });
