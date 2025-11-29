@@ -41,8 +41,21 @@ export default function SettingRow({
                         <Ionicons name={icon as any} size={20} color={iconColor} />
                     </YStack>
                     <YStack f={1}>
-                        <Text fontSize={15} fontWeight="600">{title}</Text>
-                        {subtitle && <Text fontSize={12} color="$gray10">{subtitle}</Text>}
+                        <Text
+                            fontSize={15}
+                            fontWeight="600"
+                            color={isDark ? '#e5e7eb' : '#0f172a'}
+                        >
+                            {title}
+                        </Text>
+                        {subtitle && (
+                            <Text
+                                fontSize={12}
+                                color={isDark ? '#9ca3af' : '#6b7280'}
+                            >
+                                {subtitle}
+                            </Text>
+                        )}
                     </YStack>
                 </XStack>
                 {hasToggle ? (

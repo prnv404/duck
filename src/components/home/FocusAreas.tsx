@@ -1,28 +1,45 @@
 import StreakCalendar from '@/components/StreakCalendar';
 import * as Haptics from 'expo-haptics';
-import { Pressable, ScrollView, Alert } from 'react-native';
+import { Pressable, Alert } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+interface SubjectData {
+    subjectId: string;
+    subjectName: string;
+    accuracy: number;
+    performance: 'weak' | 'average' | 'strong';
+}
+
+interface StreakDataResponse {
+    currentStreak: number;
+    longestStreak: number;
+    calendar: {
+        activityDate: string;
+        quizzesCompleted: number;
+        questionsAnswered: number;
+        xpEarned: number;
+    }[];
+}
+
 interface FocusAreasProps {
     currentStreak: number;
     isDark: boolean;
+    subjectData?: SubjectData[];
+    streakData?: StreakDataResponse | null;
+    onSubjectSelect?: (subject: SubjectData) => void;
 }
 
-const subjectData = [
-    { id: 'polity', name: 'Indian Polity', accuracy: 35, status: 'Weak', color: '#ef4444', icon: 'bank' },
-    { id: 'history', name: 'History', accuracy: 42, status: 'Weak', color: '#f97316', icon: 'book-open-variant' },
-    { id: 'geography', name: 'Geography', accuracy: 78, status: 'Strong', color: '#10b981', icon: 'earth' },
-    { id: 'economy', name: 'Economy', accuracy: 55, status: 'Average', color: '#f59e0b', icon: 'chart-line' },
-    { id: 'science', name: 'Science', accuracy: 85, status: 'Strong', color: '#06b6d4', icon: 'flask' },
-].sort((a, b) => a.accuracy - b.accuracy); // Sort Weakest first (Action priority)
+export default function FocusAreas({ currentStreak, isDark, subjectData = [], streakData, onSubjectSelect }: FocusAreasProps) {
 
-export default function FocusAreas({ currentStreak, isDark }: FocusAreasProps) {
-    
-    const handleSubjectPress = (subject: typeof subjectData[0]) => {
+    const handleSubjectPress = (subject: SubjectData) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        Alert.alert("Session Started", `Initializing practice module for ${subject.name}...`);
+        if (onSubjectSelect) {
+            onSubjectSelect(subject);
+        } else {
+            Alert.alert("Session Started", `Initializing practice module for ${subject.subjectName}...`);
+        }
     };
 
     const textMain = isDark ? '#ffffff' : '#0f172a';
@@ -30,9 +47,49 @@ export default function FocusAreas({ currentStreak, isDark }: FocusAreasProps) {
     const cardBg = isDark ? '#171717' : '#ffffff';
     const borderColor = isDark ? '#262626' : '#f1f5f9';
 
+    // Transform API subject data to UI format
+    const formattedSubjects = subjectData.map(subject => {
+        let color = '#f59e0b'; // Default Average
+        let icon = 'book-open-variant';
+
+        if (subject.performance === 'weak') {
+            color = '#ef4444';
+            icon = 'alert-circle-outline';
+        } else if (subject.performance === 'strong') {
+            color = '#10b981';
+            icon = 'check-circle-outline';
+        }
+
+        // Map specific icons based on subject name if needed
+        const nameLower = subject.subjectName.toLowerCase();
+        if (nameLower.includes('polity')) icon = 'bank';
+        else if (nameLower.includes('geography')) icon = 'earth';
+        else if (nameLower.includes('science')) icon = 'flask';
+        else if (nameLower.includes('history')) icon = 'history';
+        else if (nameLower.includes('economy')) icon = 'chart-line';
+
+        return {
+            ...subject,
+            color,
+            icon
+        };
+    }).sort((a, b) => a.accuracy - b.accuracy); // Sort Weakest first
+
+    // Transform API streak data for calendar
+    const calendarData: { [date: string]: number } = {};
+    if (streakData?.calendar) {
+        streakData.calendar.forEach(day => {
+            const dateStr = new Date(day.activityDate).toISOString().split('T')[0];
+            // Use quizzes completed or questions answered as activity metric
+            // Cap at 5 for intensity color mapping
+            const activityLevel = Math.min(day.quizzesCompleted > 0 ? day.quizzesCompleted : (day.questionsAnswered > 0 ? 1 : 0), 5);
+            calendarData[dateStr] = activityLevel;
+        });
+    }
+
     return (
         <YStack gap="$5" mt="$4">
-            
+
             <Animated.View entering={FadeInDown.delay(1200)}>
                 <XStack jc="space-between" ai="flex-end" mb="$2">
                     <YStack>
@@ -48,13 +105,13 @@ export default function FocusAreas({ currentStreak, isDark }: FocusAreasProps) {
 
             {/* Vertical Action List */}
             <YStack gap="$3.5">
-                {subjectData.map((item, index) => (
-                    <Animated.View 
-                        key={item.id} 
+                {formattedSubjects.length > 0 ? formattedSubjects.map((item, index) => (
+                    <Animated.View
+                        key={item.subjectName}
                         entering={FadeInDown.delay(1300 + index * 100)}
                         layout={Layout.springify()}
                     >
-                        <XStack 
+                        <XStack
                             bg={cardBg}
                             p="$3.5"
                             br={20}
@@ -73,8 +130,8 @@ export default function FocusAreas({ currentStreak, isDark }: FocusAreasProps) {
                             {/* LEFT SIDE: Subject Info & Analytics */}
                             <XStack gap="$3.5" ai="center" flex={1}>
                                 {/* Icon Box */}
-                                <YStack 
-                                    w={44} h={44} br={14} 
+                                <YStack
+                                    w={44} h={44} br={14}
                                     bg={`${item.color}15`} // Very subtle background tint
                                     ai="center" jc="center"
                                 >
@@ -85,20 +142,20 @@ export default function FocusAreas({ currentStreak, isDark }: FocusAreasProps) {
                                 <YStack flex={1} gap="$1.5">
                                     <XStack jc="space-between" ai="center" mr="$4">
                                         <Text fontSize={15} fontFamily="Nunito_800ExtraBold" color={textMain}>
-                                            {item.name}
+                                            {item.subjectName}
                                         </Text>
                                         <Text fontSize={12} fontFamily="Nunito_700Bold" color={item.color}>
-                                            {item.accuracy}%
+                                            {typeof item.accuracy === 'number' ? item.accuracy.toFixed(1) : item.accuracy}%
                                         </Text>
                                     </XStack>
-                                    
+
                                     {/* Mini Progress Bar */}
                                     <XStack h={5} bg={isDark ? '#333' : '#f1f5f9'} br={10} w="90%" overflow="hidden">
-                                        <YStack 
-                                            h="100%" 
-                                            bg={item.color} 
-                                            br={10} 
-                                            w={`${item.accuracy}%`} 
+                                        <YStack
+                                            h="100%"
+                                            bg={item.color}
+                                            br={10}
+                                            w={`${Math.min(item.accuracy, 100)}%`}
                                             opacity={0.8}
                                         />
                                     </XStack>
@@ -106,41 +163,35 @@ export default function FocusAreas({ currentStreak, isDark }: FocusAreasProps) {
                             </XStack>
 
                             {/* RIGHT SIDE: Explicit Action Button */}
-                            <Pressable 
+                            <Pressable
                                 onPress={() => handleSubjectPress(item)}
                                 style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
                             >
-                                <YStack 
+                                <YStack
                                     bg={isDark ? '#262626' : '#f8fafc'}
-                                    px="$3" 
-                                    py="$2.5" 
+                                    px="$3"
+                                    py="$2.5"
                                     br={12}
                                     borderWidth={1}
                                     borderColor={isDark ? '#404040' : '#e2e8f0'}
                                     ai="center"
                                     jc="center"
                                 >
-                                    <MaterialCommunityIcons 
-                                        name="play" 
-                                        size={20} 
-                                        color={isDark ? '#ffffff' : '#0f172a'} 
+                                    <MaterialCommunityIcons
+                                        name="play"
+                                        size={20}
+                                        color={isDark ? '#ffffff' : '#0f172a'}
                                     />
                                 </YStack>
                             </Pressable>
                         </XStack>
                     </Animated.View>
-                ))}
-            </YStack>
-
-            {/* Streak Section */}
-            <Animated.View entering={FadeInDown.delay(1600)}>
-                <YStack mt="$2">
-                     <Text fontSize={19} fontFamily="Nunito_900Black" color={textMain} letterSpacing={-0.5} mb="$2">
-                        Consistency
+                )) : (
+                    <Text color={textSub} fontSize={14} textAlign="center" py="$4">
+                        Complete quizzes to see your focus areas.
                     </Text>
-                    <StreakCalendar currentStreak={currentStreak} />
-                </YStack>
-            </Animated.View>
+                )}
+            </YStack>
 
         </YStack>
     );

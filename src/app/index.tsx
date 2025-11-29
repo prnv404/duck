@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { authAPI } from '@/services/auth.api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { YStack, Spinner } from 'tamagui';
 
 export default function Index() {
@@ -14,7 +15,13 @@ export default function Index() {
         const isAuthenticated = await authAPI.isAuthenticated();
 
         if (isAuthenticated) {
-            router.replace('/(tabs)');
+            const onboardingCompleted = await AsyncStorage.getItem('@onboarding_completed');
+
+            if (onboardingCompleted === 'true') {
+                router.replace('/(tabs)');
+            } else {
+                router.replace('/onboarding');
+            }
         } else {
             router.replace('/login');
         }

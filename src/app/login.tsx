@@ -3,6 +3,7 @@ import { YStack } from 'tamagui';
 import { StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
     FadeInDown,
     FadeOutUp,
@@ -54,8 +55,14 @@ export default function LoginScreen() {
             const fullPhone = `+91${phone}`;
             await authAPI.verifyOtp(fullPhone, otp);
 
-            // Navigate to main app
-            router.replace('/(tabs)');
+            // Check if onboarding is completed
+            const onboardingCompleted = await AsyncStorage.getItem('@onboarding_completed');
+
+            if (onboardingCompleted === 'true') {
+                router.replace('/(tabs)');
+            } else {
+                router.replace('/onboarding');
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Invalid OTP');
             Alert.alert('Error', 'Invalid or expired OTP. Please try again.');

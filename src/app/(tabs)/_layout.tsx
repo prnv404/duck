@@ -16,12 +16,12 @@ export default function TabLayout() {
         headerShown: false,
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: isDark ? '#34d399' : '#22c55e',
+        tabBarActiveTintColor: isDark ? '#ffffff' : '#000000',
         tabBarInactiveTintColor: isDark ? '#94a3b8' : '#64748b',
         tabBarStyle: {
-          height: 80, // Taller tab bar
-          paddingTop: 12,
-          paddingBottom: 16,
+          height: 72,
+          paddingTop: 8,
+          paddingBottom: 14,
           borderTopWidth: 1,
           borderTopColor: isDark ? '#1f2937' : '#e5e7eb',
           backgroundColor: isDark ? '#0a0f1c' : '#ffffff',

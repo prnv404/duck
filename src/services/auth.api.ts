@@ -1,13 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { graphQLClient } from './graphql/client';
-import {
-    REQUEST_OTP_MUTATION,
-    VERIFY_OTP_MUTATION,
-    REFRESH_TOKENS_MUTATION,
-    LOGOUT_MUTATION
-} from './graphql/mutations/auth';
-import { GET_CURRENT_USER_QUERY } from './graphql/queries/user';
+import { apiClient, STORAGE_KEYS } from './api-client';
 
 interface AuthResponse {
     user: {
@@ -16,6 +9,10 @@ interface AuthResponse {
         phone: string;
         fullName?: string;
         avatarUrl?: string;
+        targetExam?: string;
+        notificationEnabled?: boolean;
+        createdAt?: string;
+        lastActiveAt?: string;
     };
     accessToken: string;
     refreshToken: string;
@@ -51,90 +48,19 @@ interface UserData {
     notificationEnabled: boolean;
     targetExam?: string;
     lastActiveAt?: string;
+    avatarUrl?: string;
+    // Stats are now fetched separately in REST API, but keeping structure for compatibility if needed
     userStats?: UserStats;
 }
 
-const STORAGE_KEYS = {
-    ACCESS_TOKEN: '@auth/access_token',
-    REFRESH_TOKEN: '@auth/refresh_token',
-    USER: '@auth/user',
-};
-
 class AuthAPI {
-    private isRefreshing = false;
-    private refreshSubscribers: ((token: string) => void)[] = [];
-
-    constructor() {
-        this.configureClient();
-    }
-
-    private configureClient() {
-        graphQLClient.configure(
-            // Token Provider
-            async () => await this.getAccessToken(),
-            // Unauthorized Handler
-            async (query, variables) => await this.handleUnauthorizedError(query, variables)
-        );
-    }
-
-    private subscribeTokenRefresh(cb: (token: string) => void) {
-        this.refreshSubscribers.push(cb);
-    }
-
-    private onTokenRefreshed(token: string) {
-        this.refreshSubscribers.forEach((cb) => cb(token));
-        this.refreshSubscribers = [];
-    }
-
-    private async handleUnauthorizedError(originalQuery: string, originalVariables?: any): Promise<any> {
-        // If already refreshing, wait for it to complete
-        if (this.isRefreshing) {
-            return new Promise((resolve, reject) => {
-                this.subscribeTokenRefresh(async (token) => {
-                    try {
-                        // Retry original request with new token
-                        const data = await graphQLClient.request(originalQuery, originalVariables);
-                        resolve(data);
-                    } catch (err) {
-                        reject(err);
-                    }
-                });
-            });
-        }
-
-        this.isRefreshing = true;
-
-        try {
-            // Try to refresh the token
-            const newTokens = await this.refreshTokens();
-            this.isRefreshing = false;
-            this.onTokenRefreshed(newTokens.accessToken);
-
-            // Retry original request with new token
-            return await graphQLClient.request(originalQuery, originalVariables);
-        } catch (error) {
-            this.isRefreshing = false;
-            // Refresh failed, logout user
-            await this.clearAuthData();
-            router.replace('/login');
-            throw new Error('Session expired. Please login again.');
-        }
-    }
-
     async requestOtp(phone: string): Promise<boolean> {
-        const data = await graphQLClient.request(REQUEST_OTP_MUTATION, {
-            input: { phone },
-        }, true); // Skip auth for OTP request
-
-        return data.requestOtp;
+        const response = await apiClient.post<{ success: boolean; message: string }>('/auth/request-otp', { phone });
+        return response.success;
     }
 
     async verifyOtp(phone: string, otp: string): Promise<AuthResponse> {
-        const data = await graphQLClient.request(VERIFY_OTP_MUTATION, {
-            input: { phone, otp },
-        }, true); // Skip auth for OTP verification
-
-        const authResponse = data.verifyOtp;
+        const authResponse = await apiClient.post<AuthResponse>('/auth/verify-otp', { phone, otp });
 
         // Store tokens and user data
         await this.storeAuthData(authResponse);
@@ -148,12 +74,7 @@ class AuthAPI {
             throw new Error('No refresh token available');
         }
 
-        // Use refresh token in header via custom headers
-        const data = await graphQLClient.request(REFRESH_TOKENS_MUTATION, undefined, true, {
-            'Authorization': `Bearer ${refreshToken}`
-        });
-
-        const tokens = data.refreshTokens;
+        const tokens = await apiClient.post<RefreshTokenResponse>('/auth/refresh', { refreshToken });
 
         // Store new tokens
         await AsyncStorage.multiSet([
@@ -166,8 +87,8 @@ class AuthAPI {
 
     async logout(): Promise<void> {
         try {
-            // Call logout mutation
-            await graphQLClient.request(LOGOUT_MUTATION);
+            // Call logout endpoint
+            await apiClient.post('/auth/logout');
         } catch (error) {
             // Even if the server call fails, clear local data
             console.error('Logout error:', error);
@@ -204,17 +125,19 @@ class AuthAPI {
 
     async getCurrentUser(): Promise<UserData | null> {
         try {
-            const data = await graphQLClient.request(GET_CURRENT_USER_QUERY);
-            return data.me;
+            // In REST API, we might need two calls to get full user data + stats if needed
+            // For now, just getting the profile
+            const user = await apiClient.get<UserData>('/users/me');
+
+            // Optionally fetch stats if the UI expects it nested
+            // const stats = await apiClient.get<UserStats>('/users/me/stats');
+            // user.userStats = stats;
+
+            return user;
         } catch (error) {
             // Log detailed error information for debugging
             if (error instanceof Error) {
                 console.error('Failed to fetch current user:', error.message);
-
-                // Check if it's a network error
-                if (error.message.includes('Network error') || error.message.includes('Unable to reach')) {
-                    console.error('The server appears to be down or unreachable');
-                }
             } else {
                 console.error('Failed to fetch current user:', error);
             }

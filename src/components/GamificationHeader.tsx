@@ -1,52 +1,40 @@
 import { useColorScheme } from '@/hooks/use-color-scheme'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { Text, XStack, YStack } from 'tamagui'
-import { Pressable } from 'react-native'
 import * as Haptics from 'expo-haptics'
 
 type GamificationHeaderProps = {
     streak: number
     xp: number
     energy?: number | 'unlimited'
-    currentCourse?: { name: string; icon: string; color: string; progress?: number }
-    onCoursePress?: () => void
+    userName?: string
 }
 
-export default function GamificationHeader({ streak, xp, energy = 'unlimited', currentCourse, onCoursePress }: GamificationHeaderProps) {
+export default function GamificationHeader({ streak, xp, energy = 'unlimited', userName }: GamificationHeaderProps) {
     const isDark = useColorScheme() === 'dark'
 
     return (
         <YStack gap="$4" pt="$2">
-            {/* Stats Row - Clean & Minimal */}
+            {/* Header Row */}
             <XStack jc="space-between" ai="center">
-                {/* Course Selector */}
-                {currentCourse && (
-                    <Pressable
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                            onCoursePress?.()
-                        }}
+                {/* Welcome Text */}
+                <YStack>
+                    <Text
+                        fontSize={16}
+                        fontFamily="Nunito_900Black"
+                        color={isDark ? '#ffffff' : '#0f172a'}
                     >
-                        <XStack
-                            ai="center"
-                            gap="$2"
-                            px="$3"
-                            py="$2"
-                            br={10}
-                            bg={isDark ? '#ffffff08' : '#00000005'}
-                        >
-                            <Text fontSize={20}>{currentCourse.icon}</Text>
-                            <Text fontSize={15} fontFamily="Nunito_700Bold" color={isDark ? '#ffffff' : '#000000'}>
-                                {currentCourse.name}
-                            </Text>
-                            <MaterialCommunityIcons
-                                name="chevron-down"
-                                size={16}
-                                color={isDark ? '#ffffff80' : '#00000060'}
-                            />
-                        </XStack>
-                    </Pressable>
-                )}
+                        Welcome back
+                    </Text>
+                    <Text
+                        mt="$1"
+                        fontSize={14}
+                        fontFamily="Nunito_600SemiBold"
+                        color={isDark ? '#9ca3af' : '#6b7280'}
+                    >
+                        {userName || 'Learner'}
+                    </Text>
+                </YStack>
 
                 {/* Stats Group */}
                 <XStack gap="$4" ai="center">
@@ -60,7 +48,7 @@ export default function GamificationHeader({ streak, xp, energy = 'unlimited', c
 
                     {/* XP */}
                     <XStack ai="center" gap="$1.5">
-                        <MaterialCommunityIcons name="diamond-stone" size={22} color="#1cb0f6" />
+                        <MaterialCommunityIcons name="star-circle" size={22} color="#facc15" />
                         <Text fontSize={17} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#000000'}>
                             {xp}
                         </Text>
