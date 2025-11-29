@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { Audio as ExpoAvAudio } from 'expo-av';
-import { useState, useEffect, useRef } from 'react';
+import { useAudioPlayer, AudioSource, setAudioModeAsync } from 'expo-audio';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { practiceAPI, QuestionResponseDto, QuestionPreferenceType } from '@/services/practice.api';
 import { Alert } from 'react-native';
 
@@ -37,9 +37,12 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [initError, setInitError] = useState<{ code: 'NO_QUESTIONS' | 'GENERIC'; message: string } | null>(null);
 
-    // Refs to hold sound objects
-    const correctSoundRef = useRef<ExpoAvAudio.Sound | null>(null);
-    const incorrectSoundRef = useRef<ExpoAvAudio.Sound | null>(null);
+    // Audio players using expo-audio hooks
+    const correctSoundSource: AudioSource = useMemo(() => require('../../assets/audio/correct.mp3'), []);
+    const incorrectSoundSource: AudioSource = useMemo(() => require('../../assets/audio/incorrect.mp3'), []);
+
+    const correctPlayer = useAudioPlayer(correctSoundSource);
+    const incorrectPlayer = useAudioPlayer(incorrectSoundSource);
 
     // Fetch questions on mount
     useEffect(() => {
@@ -96,45 +99,21 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         initSession();
     }, [mode, subjectIds?.join(',')]);
 
-    // Configure Audio Mode and Preload Sounds
+    // Configure Audio Mode
     useEffect(() => {
         const setupAudio = async () => {
             try {
-                // 1. Configure Audio Mode
-                await ExpoAvAudio.setAudioModeAsync({
-                    playsInSilentModeIOS: true,
-                    staysActiveInBackground: false,
-                    shouldDuckAndroid: true,
-                    playThroughEarpieceAndroid: false,
+                await setAudioModeAsync({
+                    playsInSilentMode: true,
+                    allowsRecording: false,
                 });
-
-                // 2. Preload Sounds
-                const { sound: correctSound } = await ExpoAvAudio.Sound.createAsync(
-                    require('../../assets/audio/correct.mp3')
-                );
-                correctSoundRef.current = correctSound;
-
-                const { sound: incorrectSound } = await ExpoAvAudio.Sound.createAsync(
-                    require('../../assets/audio/incorrect.mp3')
-                );
-                incorrectSoundRef.current = incorrectSound;
-
             } catch (error) {
-                console.error('Error setting up audio:', error);
+                console.error('Error setting up audio mode:', error);
+                // Continue without audio - non-critical feature
             }
         };
 
         setupAudio();
-
-        // Cleanup: Unload sounds on unmount
-        return () => {
-            if (correctSoundRef.current) {
-                correctSoundRef.current.unloadAsync();
-            }
-            if (incorrectSoundRef.current) {
-                incorrectSoundRef.current.unloadAsync();
-            }
-        };
     }, []);
 
     const rawQuestion = questions[currentQuestionIndex];
@@ -186,12 +165,13 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
 
         // Play Sound based on local correctness
         try {
-            const soundToPlay = locallyCorrect ? correctSoundRef.current : incorrectSoundRef.current;
-            if (soundToPlay) {
-                await soundToPlay.replayAsync();
-            }
+            const playerToUse = locallyCorrect ? correctPlayer : incorrectPlayer;
+            // Reset to beginning and play
+            playerToUse.seekTo(0);
+            playerToUse.play();
         } catch (error) {
             console.error('Error playing sound:', error);
+            // Continue without audio - non-critical feature
         }
 
         // Strong Haptic Feedback based on local correctness

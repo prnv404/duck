@@ -49,21 +49,21 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, isDark }) 
                                 textTransform="uppercase"
                                 letterSpacing={1.5}
                             >
-                                Study Platform
+                                PSC Aspirant App
                             </Text>
                         </YStack>
 
                         {/* Hero Text */}
                         <YStack gap="$5">
                             <Text
-                                fontSize={48}
+                                fontSize={46}
                                 fontWeight="900"
                                 color={textColor}
                                 fontFamily="$heading"
-                                lineHeight={52}
+                                lineHeight={50}
                                 letterSpacing={-1}
                             >
-                                Learn at your{'\n'}own pace
+                                Crack your PSC{'\n'}exam step by step
                             </Text>
 
                             <Text
@@ -73,16 +73,34 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, isDark }) 
                                 lineHeight={28}
                                 maxWidth={340}
                             >
-                                Master competitive exams with personalized practice sessions and detailed performance insights.
+                                Built for PSC aspirants: subject-wise practice, previous year questions,
+                                and smart quizzes that follow the actual exam pattern.
                             </Text>
                         </YStack>
 
                         {/* Features */}
                         <YStack gap="$5" marginTop="$4">
                             {[
-                                { number: '01', title: 'Smart Practice', desc: 'Questions adapted to your level' },
-                                { number: '02', title: 'Instant Analysis', desc: 'Understand mistakes immediately' },
-                                { number: '03', title: 'Progress Tracking', desc: 'Monitor your improvement daily' },
+                                {
+                                    number: '01',
+                                    title: 'PSC-style mock questions',
+                                    desc: 'Practice MCQs that match real PSC difficulty and pattern.',
+                                },
+                                {
+                                    number: '02',
+                                    title: 'Previous year focus',
+                                    desc: 'Revise high-frequency topics from past PSC papers.',
+                                },
+                                {
+                                    number: '03',
+                                    title: 'Subject & topic analytics',
+                                    desc: 'See your weak areas in GK, Maths, English and more.',
+                                },
+                                {
+                                    number: '04',
+                                    title: 'Daily streak & XP system',
+                                    desc: 'Stay consistent with streaks, XP and a friendly progress card.',
+                                },
                             ].map((item) => (
                                 <YStack key={item.number} gap="$2">
                                     <Text

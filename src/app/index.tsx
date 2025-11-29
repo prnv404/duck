@@ -16,7 +16,7 @@ export default function Index() {
 
         if (isAuthenticated) {
             const onboardingCompleted = await AsyncStorage.getItem('@onboarding_completed');
-
+            await AsyncStorage.removeItem("@onboarding_completed")
             if (onboardingCompleted === 'true') {
                 router.replace('/(tabs)');
             } else {
