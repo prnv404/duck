@@ -204,7 +204,7 @@ export default function QuizScreen() {
                 {/* Scrollable Content */}
                 <ScrollView
                     style={{ flex: 1 }}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 16 }}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 28, paddingBottom: 16 }}
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Question with slide animation */}
@@ -231,6 +231,7 @@ export default function QuizScreen() {
                         key={`options-${quiz.currentQuestionIndex}`}
                         entering={SlideInRight.delay(100).duration(300).springify()}
                         exiting={SlideOutLeft.duration(200)}
+                        style={{ marginTop: 32 }}
                     >
                         <OptionsGrid
                             options={quiz.currentQuestion.options}

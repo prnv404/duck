@@ -51,20 +51,7 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
                 h={52}
                 opacity={isDisabled && !hasAnswered ? 0.6 : 1}
             >
-                {isSubmitting ? (
-                    <XStack ai="center" gap="$2">
-                        <ActivityIndicator size="small" color="#ffffff" />
-                        <Text
-                            fontSize={18}
-                            fontFamily="Nunito_800ExtraBold"
-                            color="#ffffff"
-                            textTransform="uppercase"
-                            letterSpacing={0.5}
-                        >
-                            Checking...
-                        </Text>
-                    </XStack>
-                ) : isFinishing ? (
+                {isFinishing ? (
                     <XStack ai="center" gap="$2">
                         <ActivityIndicator size="small" color="#ffffff" />
                         <Text

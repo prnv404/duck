@@ -164,71 +164,61 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
     const handleCheck = async () => {
         if (!selectedOption || !sessionId || !rawQuestion || isSubmitting) return;
 
-        setIsSubmitting(true);
         const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
-        // Find option ID
+        // Find option ID for backend payload
         const selectedOptionObj = rawQuestion.answerOptions.find(o => o.optionText === selectedOption);
         if (!selectedOptionObj) {
-            setIsSubmitting(false);
             return;
         }
 
-        try {
-            // Submit answer to API
-            const result = await practiceAPI.submitAnswer(sessionId, {
-                questionId: rawQuestion.id,
-                selectedOptionId: selectedOptionObj.id,
-                timeSpentSeconds: timeSpent
-            });
-
-
-
-            const correct = result.isCorrect;
-            setIsCorrect(correct);
-            setHasAnswered(true);
-
-            // If we didn't have the correct answer locally (e.g. secure mode), update it now so UI can show it
-            if (!currentQuestion?.correctAnswer && !correct) {
-                // We need to fetch the correct answer or infer it. 
-                // The API result tells us if WE were correct.
-                // If we were wrong, we might need to know which one WAS correct.
-                // The current UI expects `currentQuestion.correctAnswer` to be populated to show the green highlight.
-                // If the API doesn't return the correct option ID in the answer response, we might be stuck.
-                // However, usually `submitAnswer` might return the correct answer or we should have it.
-                // Let's assume for now `isCorrect` property in options was populated or we can't show it.
-                // If `isCorrect` is hidden in `questions` response, we can't show the right answer unless `submitAnswer` returns it.
-                // Our `SessionAnswerResponseDto` only has `isCorrect` boolean.
-                // If the backend hides answers, we might need to update backend to return correct answer on submission.
-                // For now, let's assume `questions` response INCLUDES `isCorrect` flags (as seen in `PracticeController`).
-            }
-
-            // Play Sound
-            try {
-                const soundToPlay = correct ? correctSoundRef.current : incorrectSoundRef.current;
-                if (soundToPlay) {
-                    await soundToPlay.replayAsync();
-                }
-            } catch (error) {
-                console.error('Error playing sound:', error);
-            }
-
-            // Strong Haptic Feedback
-            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-            if (correct) {
-                setScore(prev => prev + 1);
-            } else {
-                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            }
-
-        } catch (error: any) {
-            console.error('Error submitting answer:', error);
-            const errorMessage = error?.response?.data?.message || 'Failed to submit answer. Please try again.';
-            Alert.alert('Error', errorMessage);
-        } finally {
-            setIsSubmitting(false);
+        // 1) Compute correctness locally for instant UX
+        let locallyCorrect = false;
+        if (currentQuestion?.correctAnswer) {
+            locallyCorrect = selectedOption === currentQuestion.correctAnswer;
+        } else {
+            // Fallback if for some reason correctAnswer is empty but isCorrect flags exist
+            locallyCorrect = !!rawQuestion.answerOptions.find(o => o.optionText === selectedOption && o.isCorrect);
         }
+
+        setIsCorrect(locallyCorrect);
+        setHasAnswered(true);
+
+        // Play Sound based on local correctness
+        try {
+            const soundToPlay = locallyCorrect ? correctSoundRef.current : incorrectSoundRef.current;
+            if (soundToPlay) {
+                await soundToPlay.replayAsync();
+            }
+        } catch (error) {
+            console.error('Error playing sound:', error);
+        }
+
+        // Strong Haptic Feedback based on local correctness
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        if (locallyCorrect) {
+            setScore(prev => prev + 1);
+        } else {
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+
+        // 2) Submit answer in the background (non-blocking)
+        setIsSubmitting(true);
+        (async () => {
+            try {
+                await practiceAPI.submitAnswer(sessionId, {
+                    questionId: rawQuestion.id,
+                    selectedOptionId: selectedOptionObj.id,
+                    timeSpentSeconds: timeSpent
+                });
+            } catch (error: any) {
+                console.error('Error submitting answer:', error);
+                const errorMessage = error?.response?.data?.message || 'Failed to submit answer. Please try again.';
+                Alert.alert('Error', errorMessage);
+            } finally {
+                setIsSubmitting(false);
+            }
+        })();
     };
 
     const completeSession = async (): Promise<any | undefined> => {
@@ -238,7 +228,7 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
             const completionData = await practiceAPI.completeSession(sessionId);
             console.log(
                 'session',
-                completeSession
+                completionData
             )
             return completionData;
         } catch (error) {

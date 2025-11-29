@@ -12,7 +12,7 @@ interface SessionCompletionScreenProps {
         questionsAttempted: number;
         correctAnswers: number;
         wrongAnswers: number;
-        accuracy: number;
+        accuracy: number | string;
         xpEarned: number;
         timeSpentSeconds: number;
     } | null;
@@ -36,20 +36,20 @@ export default function SessionCompletionScreen({
 
     if (!sessionData) return null;
 
-    const { correctAnswers, questionsAttempted, accuracy = 0, xpEarned, timeSpentSeconds } = sessionData;
+    const { correctAnswers, questionsAttempted, wrongAnswers, accuracy = 0, xpEarned, timeSpentSeconds } = sessionData;
 
     // Determine performance level
     let performanceLevel = 'Keep Practicing';
     let performanceColor = '#f59e0b';
     let performanceIcon = 'emoticon-neutral';
 
-    const accuracyValue = typeof accuracy === 'number' ? accuracy : 0;
+    const accuracyValue = typeof accuracy === 'number' ? accuracy : parseFloat(accuracy || '0');
 
     if (accuracyValue >= 80) {
         performanceLevel = 'Excellent!';
         performanceColor = '#10b981';
         performanceIcon = 'emoticon-excited';
-    } else if (accuracyValue >= 60) {
+    } else if (accuracyValue >= 50) {
         performanceLevel = 'Good Job!';
         performanceColor = '#3b82f6';
         performanceIcon = 'emoticon-happy';
@@ -61,8 +61,9 @@ export default function SessionCompletionScreen({
 
     const stats = [
         { label: 'Score', value: `${correctAnswers}/${questionsAttempted}`, icon: 'trophy', color: '#fbbf24' },
+        { label: 'Wrong Answers', value: `${wrongAnswers}`, icon: 'alert-circle', color: '#f97373' },
         { label: 'Accuracy', value: `${accuracyValue.toFixed(1)}%`, icon: 'target', color: '#3b82f6' },
-        { label: 'XP Earned', value: `+${xpEarned}`, icon: 'diamond-stone', color: '#8b5cf6' },
+        { label: 'XP Earned', value: `+${xpEarned}`, icon: 'star-circle', color: '#facc15' },
         { label: 'Time Spent', value: timeDisplay, icon: 'clock-outline', color: '#ec4899' },
     ];
 

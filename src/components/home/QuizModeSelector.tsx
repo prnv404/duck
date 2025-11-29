@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import React, { useState } from 'react';
+import React from 'react';
+
 import { Pressable } from 'react-native';
 import Animated, {
     FadeIn,
@@ -42,8 +43,6 @@ export default function SolidModeSelector({
     onStartQuiz: () => void;
     isDark: boolean; 
 }) {
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    
     // Theme Constants
     const bg = isDark ? '#18181B' : '#FFFFFF';
     const border = isDark ? '#27272A' : '#E4E4E7';
@@ -52,16 +51,9 @@ export default function SolidModeSelector({
     const currentModeDetails = MODES.find(m => m.type === selectedMode) || MODES[0];
     const activeColor = currentModeDetails.color;
 
-    const toggleSettings = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setIsSettingsOpen(!isSettingsOpen);
-    };
-
     const handleSelectMode = (mode: QuizModeType) => {
         Haptics.selectionAsync();
         onModeSelect(mode);
-        // Snappy auto-close after selection
-        setTimeout(() => setIsSettingsOpen(false), 150);
     };
 
     return (
@@ -95,53 +87,30 @@ export default function SolidModeSelector({
                     elevation: 2,
                 }}
             >
-                {/* --- 1. Mode Display & Toggle Button (Top Section) --- */}
+                {/* --- 1. Current Mode Label --- */}
                 <XStack ai="center" jc="space-between">
                     <Text fontSize={16} fontFamily="Nunito_800ExtraBold" color={text}>
-                        {currentModeDetails.label} Challenge
+                        Mode: {currentModeDetails.label}
                     </Text>
-
-                    <Pressable onPress={toggleSettings} hitSlop={10}>
-                        <XStack ai="center" gap="$1.5">
-                            <Text fontSize={13} fontFamily="Nunito_600SemiBold" color={isSettingsOpen ? activeColor : text}>
-                                {isSettingsOpen ? 'Close Menu' : 'Change Mode'}
-                            </Text>
-                            <MaterialCommunityIcons 
-                                name={isSettingsOpen ? "close-circle" : "cog"} 
-                                size={22} 
-                                color={isSettingsOpen ? activeColor : text} 
-                            />
-                        </XStack>
-                    </Pressable>
                 </XStack>
 
-                {/* --- 2. Expandable Mode Selector (Middle Section) --- */}
-                <Animated.View 
-                    layout={LinearTransition.duration(250)}
-                    style={{ overflow: 'hidden' }}
-                >
-                    {isSettingsOpen && (
-                        <Animated.View key="modes" entering={FadeIn.duration(150)} exiting={FadeOut.duration(150)}>
-                            {/* **FIXED: Ensure all children are wrapped in YStack for containment** */}
-                            <YStack gap="$2"> 
-                                <Text fontSize={13} fontFamily="Nunito_600SemiBold" color={textSecondary}>
-                                    Select a new practice strategy:
-                                </Text>
-                                <XStack gap="$2" f={1}>
-                                    {MODES.map((mode) => (
-                                        <ModeOption 
-                                            key={mode.type}
-                                            mode={mode} 
-                                            isActive={selectedMode === mode.type}
-                                            onPress={() => handleSelectMode(mode.type)}
-                                            isDark={isDark}
-                                        />
-                                    ))}
-                                </XStack>
-                            </YStack>
-                        </Animated.View>
-                    )}
-                </Animated.View>
+                {/* --- 2. Always-visible Mode Selector (Middle Section) --- */}
+                <YStack gap="$2">
+                    <Text fontSize={13} fontFamily="Nunito_600SemiBold" color={textSecondary}>
+                        Select a practice strategy:
+                    </Text>
+                    <XStack gap="$2" f={1}>
+                        {MODES.map((mode) => (
+                            <ModeOption 
+                                key={mode.type}
+                                mode={mode} 
+                                isActive={selectedMode === mode.type}
+                                onPress={() => handleSelectMode(mode.type)}
+                                isDark={isDark}
+                            />
+                        ))}
+                    </XStack>
+                </YStack>
 
                 {/* --- 3. Call to Action (Bottom Section) --- */}
                 <StartButton 
