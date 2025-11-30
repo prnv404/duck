@@ -186,29 +186,100 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
 
     const playQuestionAudio = async () => {
         try {
-            if (sound) {
-                await sound.unloadAsync();
-                setSound(null);
+            if (!currentQuestion?.audioUrl || isMuted) {
+                return;
             }
 
-            if (currentQuestion?.audioUrl) {
-                const { sound: newSound } = await Audio.Sound.createAsync(
-                    { uri: currentQuestion.audioUrl },
-                    { shouldPlay: true }
-                );
-                setSound(newSound);
+            // If we already have a sound loaded, restart it from the beginning
+            if (sound) {
+                try {
+                    await sound.stopAsync();
+                } catch {
+                    // ignore stop errors and try to replay anyway
+                }
+
+                try {
+                    await sound.setPositionAsync(0);
+                    await sound.playAsync();
+                    return;
+                } catch (error) {
+                    console.error('Error restarting question audio, reloading sound:', error);
+                    // fallthrough to reload sound below
+                }
             }
+
+            // If no sound is loaded (or restart failed), load a fresh sound and play it
+            const { sound: newSound } = await Audio.Sound.createAsync(
+                { uri: currentQuestion.audioUrl },
+                { shouldPlay: true }
+            );
+            setSound(newSound);
         } catch (error) {
             console.error('Error playing question audio:', error);
         }
     };
 
-    // Play audio when question changes
+    // Load audio when question changes, with race-safety for very fast navigation
+    const prevQuestionIdRef = useRef<string | null>(null);
+    const audioLoadIdRef = useRef(0);
+
     useEffect(() => {
-        if (!isMuted) {
-            playQuestionAudio();
-        }
-    }, [currentQuestion?.id]); // Trigger when question ID changes
+        const loadAndPlayAudio = async () => {
+            const questionId = currentQuestion?.id || null;
+
+            // Only load new audio if question actually changed
+            if (questionId === prevQuestionIdRef.current) {
+                return;
+            }
+
+            prevQuestionIdRef.current = questionId;
+
+            // Increment load id to invalidate any previous pending loads
+            const loadId = ++audioLoadIdRef.current;
+
+            // Unload previous sound snapshot, if any
+            if (sound) {
+                try {
+                    await sound.unloadAsync();
+                } catch (error) {
+                    console.error('Error unloading sound:', error);
+                }
+
+                // If another load started while unloading, do not continue
+                if (audioLoadIdRef.current !== loadId) {
+                    return;
+                }
+
+                setSound(null);
+            }
+
+            // Load and play new audio if not muted and question has audio
+            if (!isMuted && currentQuestion?.audioUrl && questionId) {
+                try {
+                    const { sound: newSound } = await Audio.Sound.createAsync(
+                        { uri: currentQuestion.audioUrl },
+                        { shouldPlay: true }
+                    );
+
+                    // If a newer load was requested while this one was loading, discard this sound
+                    if (audioLoadIdRef.current !== loadId) {
+                        try {
+                            await newSound.unloadAsync();
+                        } catch (error) {
+                            console.error('Error unloading stale sound:', error);
+                        }
+                        return;
+                    }
+
+                    setSound(newSound);
+                } catch (error) {
+                    console.error('Error loading/playing audio:', error);
+                }
+            }
+        };
+
+        loadAndPlayAudio();
+    }, [currentQuestion?.id, isMuted]); // Trigger when question ID or mute changes
 
     const totalQuestions = questions.length;
 
@@ -221,6 +292,16 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
 
     const handleCheck = async () => {
         if (!selectedOption || !sessionId || !rawQuestion || isSubmitting) return;
+
+        // Immediately stop any ongoing question audio so only feedback sounds are heard
+        if (sound) {
+            try {
+                await sound.stopAsync();
+                await sound.setPositionAsync(0);
+            } catch (error) {
+                console.error('Error stopping question audio on check:', error);
+            }
+        }
 
         const timeSpent = Math.round((Date.now() - startTime) / 1000);
 

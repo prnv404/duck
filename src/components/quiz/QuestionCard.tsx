@@ -32,7 +32,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
                 {onPlayAudio && (
                     <MaterialCommunityIcons
-                        name="volume-high"
+                        name="replay"
                         size={24}
                         color={isDark ? '#38bdf8' : '#0284c7'}
                         onPress={onPlayAudio}

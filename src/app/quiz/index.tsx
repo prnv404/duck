@@ -32,7 +32,7 @@ export default function QuizScreen() {
     const subjectIds = subjectId ? [subjectId] : undefined;
     const quiz = useQuizState(mode, subjectIds);
 
-    const [showStartScreen, setShowStartScreen] = useState(true);
+    const [showStartScreen, setShowStartScreen] = useState(false); // Disabled countdown screen
     const [showCompletionScreen, setShowCompletionScreen] = useState(false);
     const [sessionCompletionData, setSessionCompletionData] = useState<any>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);

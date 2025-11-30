@@ -47,37 +47,13 @@ export default function SessionStartScreen({
     onComplete,
     isDark
 }: SessionStartScreenProps) {
-    const [countdown, setCountdown] = useState(3);
-    const [showGo, setShowGo] = useState(false);
-
     useEffect(() => {
-        if (!visible) {
-            setCountdown(3);
-            setShowGo(false);
-            return;
+        if (visible) {
+            // Immediately complete without countdown
+            setTimeout(() => {
+                onComplete();
+            }, 100);
         }
-
-        const timer = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev > 1) {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                    return prev - 1;
-                } else {
-                    clearInterval(timer);
-                    setShowGo(true);
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-                    // Auto-dismiss after showing "GO!"
-                    setTimeout(() => {
-                        onComplete();
-                    }, 1000);
-
-                    return 0;
-                }
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
     }, [visible, onComplete]);
 
     const modeInfo = MODE_LABELS[mode] || MODE_LABELS.balanced;
@@ -173,80 +149,6 @@ export default function SessionStartScreen({
                         </YStack>
                     </YStack>
                 </Animated.View>
-
-                {/* Countdown / GO */}
-                {!showGo ? (
-                    <Animated.View
-                        key={countdown}
-                        entering={ZoomIn.duration(400).springify()}
-                    >
-                        <YStack
-                            w={160}
-                            h={160}
-                            br={80}
-                            bg={modeInfo.color}
-                            ai="center"
-                            jc="center"
-                            style={{
-                                shadowColor: modeInfo.color,
-                                shadowOffset: { width: 0, height: 12 },
-                                shadowOpacity: 0.5,
-                                shadowRadius: 25,
-                                elevation: 15,
-                            }}
-                        >
-                            <Text
-                                fontSize={80}
-                                fontFamily="Nunito_900Black"
-                                color="#ffffff"
-                            >
-                                {countdown}
-                            </Text>
-                        </YStack>
-                    </Animated.View>
-                ) : (
-                    <Animated.View entering={ZoomIn.duration(500).springify()}>
-                        <YStack ai="center" gap="$3">
-                            <Text
-                                fontSize={90}
-                                fontFamily="Nunito_900Black"
-                                color={modeInfo.color}
-                                letterSpacing={-2}
-                                style={{
-                                    textShadowColor: `${modeInfo.color}40`,
-                                    textShadowOffset: { width: 0, height: 4 },
-                                    textShadowRadius: 20,
-                                }}
-                            >
-                                GO!
-                            </Text>
-                            <XStack ai="center" gap="$2">
-                                <Text
-                                    fontSize={18}
-                                    fontFamily="Nunito_800ExtraBold"
-                                    color={isDark ? '#ffffff' : '#000000'}
-                                >
-                                    Good Luck
-                                </Text>
-                                <Text fontSize={20}>🚀</Text>
-                            </XStack>
-                        </YStack>
-                    </Animated.View>
-                )}
-
-                {/* Bottom Hint */}
-                {!showGo && (
-                    <Animated.View entering={FadeIn.delay(500).duration(600)}>
-                        <Text
-                            fontSize={13}
-                            fontFamily="Nunito_600SemiBold"
-                            color={isDark ? '#71717a' : '#a1a1aa'}
-                            textAlign="center"
-                        >
-                            Get ready to test your knowledge
-                        </Text>
-                    </Animated.View>
-                )}
             </YStack>
         </Modal>
     );
