@@ -8,13 +8,17 @@ interface QuizHeaderProps {
     totalQuestions: number;
     onClose: () => void;
     isDark: boolean;
+    isMuted: boolean;
+    toggleMute: () => void;
 }
 
 export const QuizHeader: React.FC<QuizHeaderProps> = ({
     currentQuestion,
     totalQuestions,
     onClose,
-    isDark
+    isDark,
+    isMuted,
+    toggleMute
 }) => {
     return (
         <XStack ai="center" gap="$3" px="$4" py="$2">
@@ -35,8 +39,13 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
                 />
                 <YStack position="absolute" top={3} left={3} right={3} h={3} bg="rgba(255,255,255,0.2)" br={3} />
             </YStack>
-            {/* Reserved for language toggle */}
-            <YStack w={24} h={24} />
+
+            <MaterialCommunityIcons
+                name={isMuted ? "volume-off" : "volume-high"}
+                size={24}
+                color={isDark ? '#9ca3af' : '#6b7280'}
+                onPress={toggleMute}
+            />
         </XStack>
     );
 };

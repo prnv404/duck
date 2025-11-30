@@ -28,6 +28,7 @@ export interface QuestionResponseDto {
     difficulty: number;
     isActive: boolean;
     createdAt: string;
+    audioUrl?: string | null;
     answerOptions: {
         id: string;
         questionId: string;

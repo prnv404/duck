@@ -199,6 +199,8 @@ export default function QuizScreen() {
                     totalQuestions={quiz.totalQuestions}
                     onClose={handleExit}
                     isDark={isDark}
+                    isMuted={quiz.isMuted}
+                    toggleMute={quiz.toggleMute}
                 />
 
                 {/* Scrollable Content */}
@@ -218,6 +220,7 @@ export default function QuizScreen() {
                             currentIndex={quiz.currentQuestionIndex}
                             totalQuestions={quiz.totalQuestions}
                             isDark={isDark}
+                            onPlayAudio={quiz.currentQuestion.audioUrl ? quiz.playQuestionAudio : undefined}
                         />
                     </Animated.View>
 

@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -6,13 +7,15 @@ interface QuestionCardProps {
     currentIndex: number;
     totalQuestions: number;
     isDark: boolean;
+    onPlayAudio?: () => void;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
     question,
     currentIndex,
     totalQuestions,
-    isDark
+    isDark,
+    onPlayAudio
 }) => {
     return (
         <YStack mb="$4">
@@ -26,8 +29,15 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 >
                     Question {currentIndex + 1}/{totalQuestions}
                 </Text>
-                {/* Reserved for voice button */}
-                <YStack w={32} h={32} />
+
+                {onPlayAudio && (
+                    <MaterialCommunityIcons
+                        name="volume-high"
+                        size={24}
+                        color={isDark ? '#38bdf8' : '#0284c7'}
+                        onPress={onPlayAudio}
+                    />
+                )}
             </XStack>
 
             <Text
