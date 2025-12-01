@@ -87,7 +87,8 @@ export default function ProfileScreen() {
   const currentXP = userStats?.totalXp || 0;
   const xpToNextLevel = userStats?.xpToNextLevel || 100;
 
-  const xpProgress = 50; // Placeholder until logic is clarified
+  // Calculate XP progress percentage for the current level
+  const xpProgress = xpToNextLevel > 0 ? Math.min((currentXP / xpToNextLevel) * 100, 100) : 0;
 
   const primaryStats = [
     {
@@ -294,7 +295,7 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, o
                   Sign out of Duck?
                 </Text>
                 <Text fontSize={15} fontFamily="Nunito_600SemiBold" color={subText} textAlign="center">
-                  We’ll keep your streak and XP safe. You can log back in anytime.
+                  We'll keep your streak and XP safe. You can log back in anytime.
                 </Text>
               </YStack>
             </YStack>

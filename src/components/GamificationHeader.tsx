@@ -41,11 +41,11 @@ export default function GamificationHeader({ streak, xp, energy = 'unlimited', u
                 {/* Welcome Text */}
                 <YStack>
                     <Text
-                        fontSize={16}
+                        fontSize={20}
                         fontFamily="Nunito_900Black"
                         color={isDark ? '#ffffff' : '#0f172a'}
                     >
-                        Welcome back
+                        Welcome
                     </Text>
                     <Text
                         mt="$1"
@@ -53,7 +53,7 @@ export default function GamificationHeader({ streak, xp, energy = 'unlimited', u
                         fontFamily="Nunito_600SemiBold"
                         color={isDark ? '#9ca3af' : '#6b7280'}
                     >
-                        {userName || 'Learner'}
+                        {`${userName || 'Learner'}`}
                     </Text>
                 </YStack>
 

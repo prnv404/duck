@@ -6,6 +6,8 @@ import { Modal } from 'react-native';
 import Animated, {
     FadeInDown,
     ZoomIn,
+    FadeOut,
+    SlideOutDown,
 } from 'react-native-reanimated';
 import { Text, XStack, YStack, Button } from 'tamagui';
 
@@ -59,11 +61,14 @@ export default function SessionCompletionScreen({
     onContinue,
     isDark,
 }: SessionCompletionScreenProps) {
+    const [isExiting, setIsExiting] = useState(false);
+
     // Initialize audio player with the reward sound
     const player = useAudioPlayer(require('../../../assets/audio/reward.mp3'));
 
     useEffect(() => {
         if (visible && sessionData) {
+            setIsExiting(false);
             const playSequence = async () => {
                 // Audio
                 try {
@@ -82,6 +87,14 @@ export default function SessionCompletionScreen({
         }
     }, [visible, sessionData]);
 
+    const handleContinue = () => {
+        setIsExiting(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setTimeout(() => {
+            onContinue();
+        }, 300);
+    };
+
     if (!sessionData) return null;
 
     const { correctAnswers, questionsAttempted, wrongAnswers, accuracy = 0, xpEarned, timeSpentSeconds, totalQuestions } = sessionData;
@@ -94,7 +107,7 @@ export default function SessionCompletionScreen({
 
     // Motivational Message Logic
     let title = 'Good Job!';
-    let subtitle = 'You completed the lesson!';
+    let subtitle = 'You completed the practice!';
     let titleColor = '#3b82f6'; // blue
 
     if (accuracyValue >= 90) {
@@ -152,73 +165,76 @@ export default function SessionCompletionScreen({
     ];
 
     const bg = isDark ? '#020617' : '#ffffff';
-    const cardBg = isDark ? '#1e293b' : '#ffffff';
+    const cardBg = isDark ? '#1e293b' : '#f8fafc';
     const borderColor = isDark ? '#334155' : '#e2e8f0';
     const textColor = isDark ? '#f8fafc' : '#0f172a';
 
     return (
         <Modal
             visible={visible}
-            animationType="slide"
+            animationType="fade"
             statusBarTranslucent
             presentationStyle="fullScreen"
+            transparent={false}
         >
-            <YStack f={1} bg={bg} pt="$8" pb="$6" px="$4" jc="space-between">
+            <YStack f={1} bg={bg} pt="$8" pb="$6" px="$5" jc="space-between">
 
                 <YStack ai="center" w="100%">
                     {/* Header */}
-                    <Animated.View entering={FadeInDown.duration(600).springify()}>
+                    <Animated.View entering={FadeInDown.duration(600).springify()} exiting={FadeOut.duration(200)}>
                         <Text
-                            fontSize={30}
+                            fontSize={32}
                             fontFamily="Nunito_900Black"
-                            color="#eab308"
+                            color="#58cc02"
                             textAlign="center"
-                            mb="$6"
+                            mb="$5"
                         >
-                            Lesson Complete!
+                            Practice Complete!
                         </Text>
                     </Animated.View>
 
                     {/* Hero */}
-                    <Animated.View entering={ZoomIn.delay(200).duration(600).springify()}>
+                    <Animated.View entering={ZoomIn.delay(200).duration(600).springify()} exiting={FadeOut.duration(200)}>
                         <YStack
-                            w={140}
-                            h={140}
-                            bg={isDark ? '#334155' : '#fef9c3'}
+                            w={120}
+                            h={120}
+                            bg={isDark ? '#334155' : '#dcfce7'}
                             br={999}
                             ai="center"
                             jc="center"
-                            borderWidth={4}
-                            borderColor="#eab308"
-                            mb="$6"
+                            borderWidth={5}
+                            borderColor="#58cc02"
+                            mb="$5"
                         >
                             <MaterialCommunityIcons
                                 name="trophy"
-                                size={80}
-                                color="#eab308"
+                                size={70}
+                                color="#58cc02"
                             />
                         </YStack>
                     </Animated.View>
 
-                    {/* Top Stats (Total & Mistakes) */}
-                    <XStack gap="$3" mb="$5">
+                    {/* Top Stats (Total & Mistakes) - Compact */}
+                    <XStack gap="$2.5" mb="$4" w="100%">
                         {topStats.map((stat, index) => (
                             <Animated.View
                                 key={stat.label}
                                 entering={FadeInDown.delay(stat.delay).springify()}
+                                exiting={FadeOut.duration(200)}
+                                style={{ flex: 1 }}
                             >
                                 <YStack
                                     bg={cardBg}
-                                    px="$4"
-                                    py="$2.5"
-                                    br={14}
+                                    px="$3"
+                                    py="$3"
+                                    br={16}
                                     borderWidth={2}
                                     borderColor={borderColor}
                                     ai="center"
                                     style={{ borderBottomWidth: 4 }}
                                 >
                                     <Text
-                                        fontSize={12}
+                                        fontSize={11}
                                         fontFamily="Nunito_700Bold"
                                         color={stat.color}
                                         textTransform="uppercase"
@@ -227,7 +243,7 @@ export default function SessionCompletionScreen({
                                         {stat.label}
                                     </Text>
                                     <Text
-                                        fontSize={20}
+                                        fontSize={24}
                                         fontFamily="Nunito_900Black"
                                         color={textColor}
                                     >
@@ -238,11 +254,11 @@ export default function SessionCompletionScreen({
                         ))}
                     </XStack>
 
-                    {/* Motivational Message */}
-                    <Animated.View entering={ZoomIn.delay(450).springify()}>
-                        <YStack ai="center" gap="$1" mb="$6">
+                    {/* Motivational Message - Compact */}
+                    <Animated.View entering={ZoomIn.delay(450).springify()} exiting={FadeOut.duration(200)}>
+                        <YStack ai="center" gap="$1" mb="$4">
                             <Text
-                                fontSize={28}
+                                fontSize={26}
                                 fontFamily="Nunito_900Black"
                                 color={titleColor}
                                 textAlign="center"
@@ -250,7 +266,7 @@ export default function SessionCompletionScreen({
                                 {title}
                             </Text>
                             <Text
-                                fontSize={16}
+                                fontSize={15}
                                 fontFamily="Nunito_700Bold"
                                 color={isDark ? '#94a3b8' : '#64748b'}
                                 textAlign="center"
@@ -260,33 +276,34 @@ export default function SessionCompletionScreen({
                         </YStack>
                     </Animated.View>
 
-                    {/* Bottom Stats (XP, Accuracy, Time) */}
-                    <XStack gap="$3" flexWrap="wrap" jc="center">
+                    {/* Bottom Stats (XP, Accuracy, Time) - Compact */}
+                    <XStack gap="$2.5" w="100%">
                         {bottomStats.map((stat, index) => (
                             <Animated.View
                                 key={stat.label}
                                 entering={FadeInDown.delay(stat.delay).springify()}
-                                style={{ width: '30%' }}
+                                exiting={FadeOut.duration(200)}
+                                style={{ flex: 1 }}
                             >
                                 <YStack
                                     bg={cardBg}
-                                    p="$2"
+                                    p="$2.5"
                                     br={16}
                                     borderWidth={2}
                                     borderColor={borderColor}
                                     ai="center"
                                     gap="$1"
-                                    h={100}
+                                    h={95}
                                     jc="center"
                                     style={{ borderBottomWidth: 4 }}
                                 >
                                     <MaterialCommunityIcons
                                         name={stat.icon as any}
-                                        size={24}
+                                        size={22}
                                         color={stat.color}
                                     />
                                     <Text
-                                        fontSize={11}
+                                        fontSize={10}
                                         fontFamily="Nunito_700Bold"
                                         color={isDark ? '#94a3b8' : '#64748b'}
                                         textTransform="uppercase"
@@ -320,15 +337,16 @@ export default function SessionCompletionScreen({
                     </XStack>
                 </YStack>
 
-                {/* Footer */}
+                {/* Footer - Closer to stats */}
                 <Animated.View
                     entering={FadeInDown.delay(900).springify()}
-                    style={{ width: '100%' }}
+                    exiting={SlideOutDown.duration(300)}
+                    style={{ width: '100%', marginTop: 24 }}
                 >
                     <Button
                         size="$5"
                         bg="#58cc02"
-                        onPress={onContinue}
+                        onPress={handleContinue}
                         pressStyle={{ scale: 0.96, opacity: 0.9 }}
                         br={16}
                         h={56}

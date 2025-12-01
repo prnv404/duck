@@ -23,8 +23,8 @@ export default function TabLayout() {
           paddingTop: 8,
           paddingBottom: 14,
           borderTopWidth: 1,
-          borderTopColor: isDark ? '#1f2937' : '#e5e7eb',
-          backgroundColor: isDark ? '#0a0f1c' : '#ffffff',
+          borderTopColor: isDark ? '#2b2c2dff' : '#e5e7eb',
+          backgroundColor: isDark ? '#060910ff' : '#ffffff',
         },
         tabBarLabelStyle: {
           fontSize: 12,

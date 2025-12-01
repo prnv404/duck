@@ -64,7 +64,7 @@ export default function SolidModeSelector({
                     🎯 Practice Questions
                 </Text>
                 <Text fontSize={14} fontFamily="Nunito_600SemiBold" color={textSecondary} textAlign="center">
-                    Select your focus and start grinding.
+                    Build knowledge and crack your exams
                 </Text>
             </YStack>
 

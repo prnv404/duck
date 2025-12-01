@@ -145,8 +145,11 @@ export default function QuizScreen() {
     };
 
     const handleCompletionContinue = () => {
-        setShowCompletionScreen(false);
         router.replace('/(tabs)/home');
+        // Hide completion screen after navigation to prevent white flash
+        setTimeout(() => {
+            setShowCompletionScreen(false);
+        }, 400);
     };
 
     if (quiz.loading) {
@@ -163,63 +166,91 @@ export default function QuizScreen() {
         return (
             <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#0a0a0a' : '#ffffff' }}>
                 <Stack.Screen options={{ headerShown: false }} />
-                <YStack f={1} ai="center" jc="center" px="$5" gap="$4">
-                    <YStack
-                        bg={isDark ? '#111827' : '#f1f5f9'}
-                        br={24}
-                        p="$4.5"
-                        w="100%"
-                        maxWidth={360}
-                        borderWidth={1}
-                        borderColor={isDark ? '#1f2937' : '#e5e7eb'}
-                        gap="$3.5"
-                    >
-                        <YStack ai="center" gap="$2">
+                <YStack f={1} ai="center" jc="center" px="$5" gap="$6">
+
+                    {/* Hero Icon with Animation */}
+                    <Animated.View entering={ZoomIn.duration(600).springify()}>
+                        <YStack
+                            w={140}
+                            h={140}
+                            bg={isDark ? '#116e0cff' : '#e0f2fe'}
+                            br={70}
+                            ai="center"
+                            jc="center"
+                            style={{
+                                shadowColor: '#0ee932ff',
+                                shadowOpacity: 0.4,
+                                shadowRadius: 20,
+                                elevation: 10,
+                                borderWidth: 4,
+                                borderColor: '#0ee932ff'
+                            }}
+                        >
                             <MaterialCommunityIcons
-                                name="controller-classic-outline"
-                                size={28}
-                                color={isDark ? '#38bdf8' : '#0f766e'}
+                                name="check-decagram"
+                                size={72}
+                                color="#0ee932ff"
                             />
-                            <Text
-                                fontSize={24}
-                                fontFamily="Nunito_900Black"
-                                color={isDark ? '#e5e7eb' : '#0f172a'}
-                                textAlign="center"
-                            >
-                                You cleared this mode!
-                            </Text>
                         </YStack>
+                    </Animated.View>
 
-                        <Text
-                            fontSize={14}
-                            fontFamily="Nunito_700Bold"
-                            color={isDark ? '#9ca3af' : '#4b5563'}
-                            textAlign="center"
-                        >
-                            There aren’t enough questions here right now. That’s a good sign — you’re ahead of the queue.
-                        </Text>
+                    <YStack ai="center" gap="$3" maxWidth={320}>
+                        <Animated.View entering={FadeInUp.delay(200).springify()}>
+                            <Text
+                                fontSize={28}
+                                fontFamily="Nunito_900Black"
+                                color={isDark ? '#f8fafc' : '#0f172a'}
+                                textAlign="center"
+                                lineHeight={34}
+                            >
+                                Mode Conquered!
+                            </Text>
+                        </Animated.View>
 
-                        <Text
-                            fontSize={12}
-                            fontFamily="Nunito_600SemiBold"
-                            color={isDark ? '#6b7280' : '#6b7280'}
-                            textAlign="center"
-                        >
-                            Jump into another practice mode while we cook up more challenges for this one.
-                        </Text>
+                        <Animated.View entering={FadeInUp.delay(300).springify()}>
+                            <Text
+                                fontSize={16}
+                                fontFamily="Nunito_600SemiBold"
+                                color={isDark ? '#94a3b8' : '#64748b'}
+                                textAlign="center"
+                                lineHeight={24}
+                            >
+                                You've reached the end of this mode! We'll add more questions shortly.
+                            </Text>
+                        </Animated.View>
+
+                        <Animated.View entering={FadeInUp.delay(400).springify()}>
+                            <YStack bg={isDark ? '#1e293b' : '#f1f5f9'} p="$3" br={12} mt="$2">
+                                <Text
+                                    fontSize={14}
+                                    fontFamily="Nunito_600SemiBold"
+                                    color={isDark ? '#cbd5e1' : '#475569'}
+                                    textAlign="center"
+                                >
+                                    💡 Tip: Try a different mode to keep your streak alive while we cook up more challenges for this one.
+                                </Text>
+                            </YStack>
+                        </Animated.View>
                     </YStack>
 
-                    <YStack gap="$2" w="100%" maxWidth={260}>
-                        <Text
-                            onPress={() => router.replace('/(tabs)/home')}
-                            fontSize={15}
+                    <Animated.View entering={FadeInUp.delay(500).springify()} style={{ width: '100%', maxWidth: 280 }}>
+                        <Button
+                            size="$5"
+                            bg="#0ea5e9"
+                            color="white"
                             fontFamily="Nunito_800ExtraBold"
-                            color={isDark ? '#38bdf8' : '#0284c7'}
-                            textAlign="center"
+                            pressStyle={{ scale: 0.96, opacity: 0.9 }}
+                            onPress={() => router.replace('/(tabs)/home')}
+                            br={16}
+                            h={56}
+                            borderBottomWidth={4}
+                            borderColor="#0284c7"
+                            icon={<MaterialCommunityIcons name="home-variant" size={24} color="white" />}
                         >
                             Back to Home
-                        </Text>
-                    </YStack>
+                        </Button>
+                    </Animated.View>
+
                 </YStack>
             </SafeAreaView>
         );
