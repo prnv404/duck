@@ -1,111 +1,140 @@
-import React, { useState } from 'react';
-import { YStack } from 'tamagui';
+import React, { useCallback, useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
-    Easing,
-} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { WelcomeScreen } from '@/components/onboarding/WelcomeScreen';
-import { NameInputScreen } from '@/components/onboarding/NameInputScreen';
+import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import { YStack } from 'tamagui';
+import { BusinessPitchSlide } from '@/components/onboarding/BusinessPitchSlide';
+import { ValuePropSlide } from '@/components/onboarding/ValuePropSlide';
+import { JourneySlide } from '@/components/onboarding/JourneySlide';
+import { IdentitySlide } from '@/components/onboarding/IdentitySlide';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { userAPI } from '@/services/user.api';
+
+const SLIDES = ['pitch', 'structure', 'journey', 'identity'] as const;
+
+type SlideKey = (typeof SLIDES)[number];
 
 export default function OnboardingScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
-    const [currentScreen, setCurrentScreen] = useState(0);
+    const [currentScreen, setCurrentScreen] = useState<SlideKey>('pitch');
     const [name, setName] = useState('');
+    const totalSteps = SLIDES.length;
 
-    const opacity1 = useSharedValue(1);
-    const opacity2 = useSharedValue(0);
-    const translateY1 = useSharedValue(0);
-    const translateY2 = useSharedValue(50);
+    const currentIndex = useMemo(() => SLIDES.indexOf(currentScreen), [currentScreen]);
 
-    const handleNext = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const goToIndex = useCallback(
+        (index: number) => {
+            const target = SLIDES[Math.min(Math.max(index, 0), totalSteps - 1)];
+            if (target !== currentScreen) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setCurrentScreen(target);
+            }
+        },
+        [currentScreen, totalSteps],
+    );
 
-        // Fade out first screen
-        opacity1.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.cubic) });
-        translateY1.value = withTiming(-50, { duration: 400, easing: Easing.out(Easing.cubic) });
+    const handleNext = useCallback(() => {
+        goToIndex(currentIndex + 1);
+    }, [currentIndex, goToIndex]);
 
-        // Fade in second screen
-        setTimeout(() => {
-            setCurrentScreen(1);
-            opacity2.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) });
-            translateY2.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
-        }, 200);
-    };
+    const handleBack = useCallback(() => {
+        goToIndex(currentIndex - 1);
+    }, [currentIndex, goToIndex]);
 
-    const handleBack = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-        // Fade out second screen
-        opacity2.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.cubic) });
-        translateY2.value = withTiming(50, { duration: 400, easing: Easing.out(Easing.cubic) });
-
-        // Fade in first screen
-        setTimeout(() => {
-            setCurrentScreen(0);
-            opacity1.value = withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) });
-            translateY1.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.cubic) });
-        }, 200);
-    };
+    const handleSkip = useCallback(() => {
+        goToIndex(totalSteps - 1);
+    }, [goToIndex, totalSteps]);
 
     const handleComplete = async (userName: string) => {
         if (!userName.trim()) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             return;
         }
 
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
         try {
+            // Best-effort profile update; onboarding should still complete even if this fails
+            try {
+                await userAPI.updateProfile({ fullName: userName.trim() });
+            } catch (apiError) {
+                console.warn('Failed to update user fullName during onboarding:', apiError);
+            }
+
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             await AsyncStorage.setItem('@onboarding_completed', 'true');
             await AsyncStorage.setItem('@user_name', userName.trim());
-
-            setTimeout(() => {
-                router.replace('/(tabs)');
-            }, 300);
+            router.replace('/(tabs)');
         } catch (error) {
             console.error('Error saving onboarding data:', error);
         }
     };
 
-    const screen1Style = useAnimatedStyle(() => ({
-        opacity: opacity1.value,
-        transform: [{ translateY: translateY1.value }],
-    }));
-
-    const screen2Style = useAnimatedStyle(() => ({
-        opacity: opacity2.value,
-        transform: [{ translateY: translateY2.value }],
-    }));
-
     const isDark = colorScheme === 'dark';
 
-    return (
-        <YStack flex={1} backgroundColor={isDark ? '#0a0a0a' : '#faf9f6'}>
-            <StatusBar style={isDark ? 'light' : 'dark'} />
-
-            {currentScreen === 0 ? (
-                <Animated.View style={[{ flex: 1 }, screen1Style]}>
-                    <WelcomeScreen onNext={handleNext} isDark={isDark} />
-                </Animated.View>
-            ) : (
-                <Animated.View style={[{ flex: 1 }, screen2Style]}>
-                    <NameInputScreen
+    const renderSlide = () => {
+        const step = currentIndex + 1;
+        switch (currentScreen) {
+            case 'pitch':
+                return (
+                    <BusinessPitchSlide
+                        isDark={isDark}
+                        onNext={handleNext}
+                        onSkip={handleSkip}
+                        step={step}
+                        totalSteps={totalSteps}
+                    />
+                );
+            case 'structure':
+                return (
+                    <ValuePropSlide
+                        isDark={isDark}
+                        onNext={handleNext}
+                        onBack={handleBack}
+                        onSkip={handleSkip}
+                        step={step}
+                        totalSteps={totalSteps}
+                    />
+                );
+            case 'journey':
+                return (
+                    <JourneySlide
+                        isDark={isDark}
+                        onNext={handleNext}
+                        onBack={handleBack}
+                        onSkip={handleSkip}
+                        step={step}
+                        totalSteps={totalSteps}
+                    />
+                );
+            case 'identity':
+            default:
+                return (
+                    <IdentitySlide
+                        isDark={isDark}
                         name={name}
                         setName={setName}
-                        onComplete={handleComplete}
                         onBack={handleBack}
-                        isDark={isDark}
+                        onComplete={handleComplete}
+                        step={step}
+                        totalSteps={totalSteps}
                     />
-                </Animated.View>
-            )}
+                );
+        }
+    };
+
+    return (
+        <YStack flex={1} backgroundColor={isDark ? '#030303' : '#fdfcf7'}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <Animated.View
+                key={currentScreen}
+                style={{ flex: 1 }}
+                entering={FadeInRight.duration(320)}
+                exiting={FadeOutLeft.duration(260)}
+            >
+                {renderSlide()}
+            </Animated.View>
         </YStack>
     );
 }

@@ -3,11 +3,11 @@ import { useQuizState } from '@/hooks/useQuizState';
 import { useQuizAudio } from '@/hooks/useQuizAudio';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
-import { ScrollView, ActivityIndicator, Alert } from 'react-native';
-import Animated, { ZoomIn, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+import { ScrollView, ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { ZoomIn, SlideInRight, SlideOutLeft, FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { YStack, Text } from 'tamagui';
+import { YStack, Text, Button, XStack } from 'tamagui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
     FeedbackSection,
@@ -62,6 +62,8 @@ export default function QuizScreen() {
     const [sessionCompletionData, setSessionCompletionData] = useState<any>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [isFinishingSession, setIsFinishingSession] = useState(false);
+    const [showExitDialog, setShowExitDialog] = useState(false);
+    const [exitProcessing, setExitProcessing] = useState(false);
 
     const handleStartComplete = () => {
         setShowStartScreen(false);
@@ -89,33 +91,27 @@ export default function QuizScreen() {
     };
 
     const handleExit = async () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        Alert.alert(
-            'Exit Quiz?',
-            'Your current practice session will be wrapped up. Do you want to exit?',
-            [
-                {
-                    text: 'Cancel',
-                    style: 'cancel',
-                },
-                {
-                    text: 'Exit',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            if (quiz.totalQuestions > 0) {
-                                await quiz.completeSession();
-                                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                            }
-                            router.replace('/(tabs)/home');
-                        } catch (error) {
-                            console.error('Error exiting quiz:', error);
-                            router.replace('/(tabs)/home');
-                        }
-                    },
-                },
-            ]
-        );
+        await Haptics.selectionAsync();
+        setShowExitDialog(true);
+    };
+
+    const handleConfirmExit = async () => {
+        if (exitProcessing) return;
+
+        setExitProcessing(true);
+        try {
+            if (quiz.totalQuestions > 0) {
+                await quiz.completeSession();
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+            router.replace('/(tabs)/home');
+        } catch (error) {
+            console.error('Error exiting quiz:', error);
+            router.replace('/(tabs)/home');
+        } finally {
+            setExitProcessing(false);
+            setShowExitDialog(false);
+        }
     };
 
     const handleCheck = async () => {
@@ -371,6 +367,124 @@ export default function QuizScreen() {
                 onContinue={handleCompletionContinue}
                 isDark={isDark}
             />
+
+            <ExitQuizDialog
+                visible={showExitDialog}
+                isDark={isDark}
+                loading={exitProcessing}
+                onCancel={() => {
+                    if (!exitProcessing) {
+                        setShowExitDialog(false);
+                    }
+                }}
+                onConfirm={handleConfirmExit}
+            />
         </>
     );
 }
+
+interface ExitDialogProps {
+    visible: boolean;
+    isDark: boolean;
+    loading: boolean;
+    onCancel: () => void;
+    onConfirm: () => void;
+}
+
+const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, onCancel, onConfirm }) => {
+    const accent = '#ef4444';
+    const accentBg = isDark ? 'rgba(248,113,113,0.15)' : 'rgba(248,113,113,0.12)';
+    const subText = isDark ? '#94a3b8' : '#475569';
+    const bg = isDark ? '#020617' : '#ffffff';
+
+    return (
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+            <View style={styles.exitOverlay}>
+                <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} disabled={loading} />
+
+                <Animated.View entering={FadeInUp.springify()} exiting={FadeOutDown} style={{ width: '88%' }}>
+                    <YStack
+                        bg={bg}
+                        borderRadius={28}
+                        padding="$5"
+                        gap="$4"
+                        shadowColor="rgba(15,23,42,0.5)"
+                        shadowOffset={{ width: 0, height: 18 }}
+                        shadowOpacity={0.6}
+                        shadowRadius={32}
+                        elevation={24}
+                    >
+                        <YStack ai="center" gap="$3">
+                            <YStack
+                                width={72}
+                                height={72}
+                                borderRadius={20}
+                                backgroundColor={accentBg}
+                                alignItems="center"
+                                justifyContent="center"
+                            >
+                                <MaterialCommunityIcons name="flag-outline" size={34} color={accent} />
+                            </YStack>
+
+                            <YStack gap="$2" w="100%" ai="center">
+                                <Text fontSize={24} fontFamily="Nunito_900Black" color={isDark ? '#f8fafc' : '#0f172a'}>
+                                    Leave this quiz?
+                                </Text>
+                                <Text
+                                    fontSize={15}
+                                    fontFamily="Nunito_600SemiBold"
+                                    color={subText}
+                                    textAlign="center"
+                                >
+                                    This session will not add to your streak or give you any XP.
+                                </Text>
+                            </YStack>
+                        </YStack>
+
+                        <XStack gap="$3" mt="$3">
+                            <Button
+                                flex={1}
+                                height={50}
+                                borderRadius={18}
+                                borderWidth={1}
+                                borderColor={isDark ? '#1e293b' : '#e2e8f0'}
+                                backgroundColor={isDark ? '#0b1120' : '#ffffff'}
+                                color={isDark ? '#e2e8f0' : '#0f172a'}
+                                fontFamily="Nunito_800ExtraBold"
+                                onPress={onCancel}
+                                disabled={loading}
+                                opacity={loading ? 0.6 : 1}
+                            >
+                                Stay in quiz
+                            </Button>
+
+                            <Button
+                                flex={1}
+                                height={50}
+                                borderRadius={18}
+                                backgroundColor={accent}
+                                color="#fff8f1"
+                                fontFamily="Nunito_900Black"
+                                onPress={onConfirm}
+                                disabled={loading}
+                                opacity={loading ? 0.6 : 1}
+                            >
+                                {loading ? 'Wrapping up...' : 'Exit now'}
+                            </Button>
+                        </XStack>
+                    </YStack>
+                </Animated.View>
+            </View>
+        </Modal>
+    );
+};
+
+const styles = StyleSheet.create({
+    exitOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(2,6,23,0.75)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+});

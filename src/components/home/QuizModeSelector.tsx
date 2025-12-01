@@ -20,8 +20,8 @@ import { Text, XStack, YStack, View } from 'tamagui';
 // --------------------------------------------------------------------------------
 
 const MODES = [
-    { type: 'balanced', icon: 'scale-balance', label: 'Balanced', color: '#51cb4dff' },
-    { type: 'adaptive', icon: 'brain', label: 'Adaptive', color: '#8B5CF6' },
+    { type: 'adaptive', icon: 'brain', label: 'Adaptive',color: '#51cb4dff'  },
+    { type: 'balanced', icon: 'scale-balance', label: 'Balanced', color: '#8B5CF6' },
     { type: 'weak_area', icon: 'target', label: 'Weak Spots', color: '#F59E0B' },
     { type: 'hard_core', icon: 'fire', label: 'Hardcore', color: '#EF4444' },
 ] as const;

@@ -1,5 +1,6 @@
-import { YStack, Text } from 'tamagui';
-import { ScrollView, Alert, Linking } from 'react-native';
+import { YStack, Text, Button, XStack } from 'tamagui';
+import { ScrollView, Alert, Linking, Modal, Pressable, StyleSheet, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
@@ -16,6 +17,7 @@ import LogoutButton from '@/components/profile/LogoutButton';
 import StreakCalendar from '@/components/StreakCalendar';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import SettingRow from '@/components/profile/SettingRow';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -27,6 +29,8 @@ export default function ProfileScreen() {
   const [userStats, setUserStats] = useState<any>(null);
   const [streakData, setStreakData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [logoutProcessing, setLogoutProcessing] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -51,30 +55,26 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              await authAPI.logout();
-              router.replace('/login');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+  const handleLogoutPress = () => {
+    Haptics.selectionAsync();
+    setShowLogoutDialog(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    if (logoutProcessing) return;
+
+    try {
+      setLogoutProcessing(true);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      await AsyncStorage.removeItem("@onboarding_completed");
+      await authAPI.logout();
+      setShowLogoutDialog(false);
+      router.replace('/login');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    } finally {
+      setLogoutProcessing(false);
+    }
   };
 
   const user = {
@@ -227,8 +227,122 @@ export default function ProfileScreen() {
         </YStack>
 
         {/* Logout Button */}
-        <LogoutButton onLogout={handleLogout} isDark={isDark} />
+        <LogoutButton onLogout={handleLogoutPress} isDark={isDark} />
       </ScrollView>
+
+      <LogoutDialog
+        visible={showLogoutDialog}
+        isDark={isDark}
+        loading={logoutProcessing}
+        onCancel={() => {
+          if (!logoutProcessing) {
+            setShowLogoutDialog(false);
+          }
+        }}
+        onConfirm={handleLogoutConfirm}
+      />
     </YStack>
   );
 }
+
+interface LogoutDialogProps {
+  visible: boolean;
+  isDark: boolean;
+  loading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, onCancel, onConfirm }) => {
+  const accent = '#ef4444';
+  const accentBg = isDark ? 'rgba(248,113,113,0.18)' : 'rgba(248,113,113,0.14)';
+  const bg = isDark ? '#020617' : '#ffffff';
+  const subText = isDark ? '#94a3b8' : '#475569';
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={styles.overlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} disabled={loading} />
+
+        <Animated.View entering={FadeInDown.springify()} exiting={FadeInDown}>
+          <YStack
+            width={320}
+            bg={bg}
+            borderRadius={28}
+            padding="$5"
+            gap="$4"
+            shadowColor="rgba(15,23,42,0.4)"
+            shadowOffset={{ width: 0, height: 16 }}
+            shadowOpacity={0.5}
+            shadowRadius={30}
+            elevation={22}
+          >
+            <YStack ai="center" gap="$3">
+              <YStack
+                width={68}
+                height={68}
+                borderRadius={20}
+                backgroundColor={accentBg}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <MaterialCommunityIcons name="logout-variant" size={30} color={accent} />
+              </YStack>
+
+              <YStack gap="$2" ai="center">
+                <Text fontSize={22} fontFamily="Nunito_900Black" color={isDark ? '#f8fafc' : '#0f172a'}>
+                  Sign out of Duck?
+                </Text>
+                <Text fontSize={15} fontFamily="Nunito_600SemiBold" color={subText} textAlign="center">
+                  We’ll keep your streak and XP safe. You can log back in anytime.
+                </Text>
+              </YStack>
+            </YStack>
+
+            <XStack gap="$3">
+              <Button
+                flex={1}
+                height={48}
+                borderRadius={18}
+                borderWidth={1}
+                borderColor={isDark ? '#1e293b' : '#e2e8f0'}
+                backgroundColor={isDark ? '#0b1120' : '#ffffff'}
+                color={isDark ? '#e2e8f0' : '#0f172a'}
+                fontFamily="Nunito_800ExtraBold"
+                onPress={onCancel}
+                disabled={loading}
+                opacity={loading ? 0.6 : 1}
+              >
+                Stay logged in
+              </Button>
+
+              <Button
+                flex={1}
+                height={48}
+                borderRadius={18}
+                backgroundColor={accent}
+                color="#f8feff"
+                fontFamily="Nunito_900Black"
+                onPress={onConfirm}
+                disabled={loading}
+                opacity={loading ? 0.6 : 1}
+              >
+                {loading ? 'Signing out...' : 'Logout'}
+              </Button>
+            </XStack>
+          </YStack>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(2,6,23,0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+});
