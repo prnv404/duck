@@ -1,9 +1,11 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useQuizState } from '@/hooks/useQuizState';
+import { useQuizAudio } from '@/hooks/useQuizAudio';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, ActivityIndicator, Alert } from 'react-native';
 import Animated, { ZoomIn, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack, Text } from 'tamagui';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -32,6 +34,29 @@ export default function QuizScreen() {
     const subjectIds = subjectId ? [subjectId] : undefined;
     const quiz = useQuizState(mode, subjectIds);
 
+    const [audioEnabled, setAudioEnabled] = useState(true);
+    const audio = useQuizAudio({
+        audioUrl: quiz.currentQuestion?.audioUrl,
+        isEnabled: audioEnabled,
+        autoPlay: true,
+    });
+
+    // Load audio preference from AsyncStorage on mount
+    useEffect(() => {
+        const loadAudioPreference = async () => {
+            try {
+                const savedPreference = await AsyncStorage.getItem('quizAudioEnabled');
+                if (savedPreference !== null) {
+                    setAudioEnabled(savedPreference === 'true');
+                }
+            } catch (error) {
+                console.error('Error loading audio preference:', error);
+                // Continue with default value (true)
+            }
+        };
+        loadAudioPreference();
+    }, []);
+
     const [showStartScreen, setShowStartScreen] = useState(false); // Disabled countdown screen
     const [showCompletionScreen, setShowCompletionScreen] = useState(false);
     const [sessionCompletionData, setSessionCompletionData] = useState<any>(null);
@@ -40,6 +65,27 @@ export default function QuizScreen() {
 
     const handleStartComplete = () => {
         setShowStartScreen(false);
+    };
+
+    const handleToggleAudio = async () => {
+        await Haptics.selectionAsync();
+        const newValue = !audioEnabled;
+        setAudioEnabled(newValue);
+
+        // Persist preference to AsyncStorage
+        try {
+            await AsyncStorage.setItem('quizAudioEnabled', newValue.toString());
+        } catch (error) {
+            console.error('Error saving audio preference:', error);
+        }
+
+        if (audioEnabled) {
+            audio.stop();
+        }
+    };
+
+    const handleReplayAudio = () => {
+        audio.replay();
     };
 
     const handleExit = async () => {
@@ -70,6 +116,12 @@ export default function QuizScreen() {
                 },
             ]
         );
+    };
+
+    const handleCheck = async () => {
+        // Stop audio when user submits answer
+        audio.stop();
+        await quiz.handleCheck();
     };
 
     const handleContinue = async () => {
@@ -199,8 +251,8 @@ export default function QuizScreen() {
                     totalQuestions={quiz.totalQuestions}
                     onClose={handleExit}
                     isDark={isDark}
-                    isMuted={quiz.isMuted}
-                    toggleMute={quiz.toggleMute}
+                    audioEnabled={audioEnabled}
+                    onToggleAudio={handleToggleAudio}
                 />
 
                 {/* Scrollable Content */}
@@ -220,7 +272,8 @@ export default function QuizScreen() {
                             currentIndex={quiz.currentQuestionIndex}
                             totalQuestions={quiz.totalQuestions}
                             isDark={isDark}
-                            onPlayAudio={quiz.currentQuestion.audioUrl ? quiz.playQuestionAudio : undefined}
+                            audioUrl={quiz.currentQuestion.audioUrl}
+                            onReplay={handleReplayAudio}
                         />
                     </Animated.View>
 
@@ -295,7 +348,7 @@ export default function QuizScreen() {
                         isSubmitting={quiz.isSubmitting}
                         isLastQuestion={quiz.currentQuestionIndex === quiz.totalQuestions - 1}
                         isFinishing={isFinishingSession}
-                        onCheck={quiz.handleCheck}
+                        onCheck={handleCheck}
                         onContinue={handleContinue}
                         isDark={isDark}
                     />

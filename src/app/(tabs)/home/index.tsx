@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { YStack, XStack } from 'tamagui';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authAPI } from '@/services/auth.api';
 import { curriculumAPI } from '@/services/curriculum.api';
 import { gamificationAPI } from '@/services/gamification.api';
@@ -28,6 +29,33 @@ export default function HomeScreen() {
   const [streakData, setStreakData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedMode, setSelectedMode] = useState('balanced');
+
+  // Load saved practice mode preference
+  useEffect(() => {
+    const loadModePreference = async () => {
+      try {
+        const savedMode = await AsyncStorage.getItem('practiceMode');
+        if (savedMode !== null) {
+          setSelectedMode(savedMode);
+        }
+      } catch (error) {
+        console.error('Error loading practice mode preference:', error);
+      }
+    };
+    loadModePreference();
+  }, []);
+
+  // Save practice mode when it changes
+  useEffect(() => {
+    const saveModePreference = async () => {
+      try {
+        await AsyncStorage.setItem('practiceMode', selectedMode);
+      } catch (error) {
+        console.error('Error saving practice mode preference:', error);
+      }
+    };
+    saveModePreference();
+  }, [selectedMode]);
 
   useEffect(() => {
     loadData();

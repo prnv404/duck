@@ -1,13 +1,15 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Text, XStack, YStack } from 'tamagui';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 interface QuestionCardProps {
     question: string;
     currentIndex: number;
     totalQuestions: number;
     isDark: boolean;
-    onPlayAudio?: () => void;
+    audioUrl?: string;
+    onReplay: () => void;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -15,8 +17,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     currentIndex,
     totalQuestions,
     isDark,
-    onPlayAudio
+    audioUrl,
+    onReplay,
 }) => {
+    const handleReplay = async () => {
+        await Haptics.selectionAsync();
+        onReplay();
+    };
+
     return (
         <YStack mb="$4">
             <XStack ai="center" jc="space-between" mb="$2">
@@ -29,13 +37,12 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 >
                     Question {currentIndex + 1}/{totalQuestions}
                 </Text>
-
-                {onPlayAudio && (
+                {audioUrl && (
                     <MaterialCommunityIcons
                         name="replay"
-                        size={24}
-                        color={isDark ? '#38bdf8' : '#0284c7'}
-                        onPress={onPlayAudio}
+                        size={22}
+                        color={isDark ? '#6b7280' : '#9ca3af'}
+                        onPress={handleReplay}
                     />
                 )}
             </XStack>

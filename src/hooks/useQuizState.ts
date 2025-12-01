@@ -1,8 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, AudioSource, setAudioModeAsync } from 'expo-audio';
 import { Audio } from 'expo-av';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { practiceAPI, QuestionResponseDto, QuestionPreferenceType } from '@/services/practice.api';
 import { Alert } from 'react-native';
 
@@ -12,7 +11,7 @@ export interface Question {
     options: string[];
     correctAnswer: string;
     explanation?: string;
-    audioUrl?: string | null;
+    audioUrl?: string;
 }
 
 
@@ -40,10 +39,9 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
     const [startTime, setStartTime] = useState<number>(Date.now());
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [initError, setInitError] = useState<{ code: 'NO_QUESTIONS' | 'GENERIC'; message: string } | null>(null);
-    const [isMuted, setIsMuted] = useState(false);
-    const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const [isTransitioning, setIsTransitioning] = useState(false);
 
-    // Audio players using expo-audio hooks
+    // Audio players using expo-audio hooks for feedback sounds
     const correctSoundSource: AudioSource = useMemo(() => require('../../assets/audio/correct.mp3'), []);
     const incorrectSoundSource: AudioSource = useMemo(() => require('../../assets/audio/incorrect.mp3'), []);
 
@@ -124,49 +122,8 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
             }
         };
 
-        const loadMutePreference = async () => {
-            try {
-                const storedMute = await AsyncStorage.getItem('quiz_audio_muted');
-                if (storedMute !== null) {
-                    setIsMuted(storedMute === 'true');
-                }
-            } catch (error) {
-                console.error('Error loading mute preference:', error);
-            }
-        };
-
         setupAudio();
-        loadMutePreference();
     }, []);
-
-    const toggleMute = async () => {
-        const newValue = !isMuted;
-        setIsMuted(newValue);
-        try {
-            await AsyncStorage.setItem('quiz_audio_muted', String(newValue));
-            if (newValue && sound) {
-                await sound.stopAsync();
-            } else if (!newValue && currentQuestion?.audioUrl) {
-                // If unmuting and there is a current question with audio, play it
-                const { sound: newSound } = await Audio.Sound.createAsync(
-                    { uri: currentQuestion.audioUrl },
-                    { shouldPlay: true }
-                );
-                setSound(newSound);
-            }
-        } catch (error) {
-            console.error('Error saving mute preference:', error);
-        }
-    };
-
-    // Cleanup sound on unmount
-    useEffect(() => {
-        return () => {
-            if (sound) {
-                sound.unloadAsync();
-            }
-        };
-    }, [sound]);
 
     const rawQuestion = questions[currentQuestionIndex];
 
@@ -175,111 +132,10 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         id: rawQuestion.id,
         question: rawQuestion.questionText,
         options: rawQuestion.answerOptions.map(o => o.optionText),
-        // We might not know the correct answer upfront in some modes, but for now let's assume we do 
-        // or we handle it after submission. 
-        // If the API doesn't return isCorrect for options (to prevent cheating), we rely on submit response.
-        // For UI compatibility, let's try to find it if available, or empty string.
         correctAnswer: rawQuestion.answerOptions.find(o => o.isCorrect)?.optionText || '',
         explanation: rawQuestion.explanation,
-        audioUrl: rawQuestion.audioUrl
+        audioUrl: rawQuestion.audioUrl || undefined,
     } : null;
-
-    const playQuestionAudio = async () => {
-        try {
-            if (!currentQuestion?.audioUrl || isMuted) {
-                return;
-            }
-
-            // If we already have a sound loaded, restart it from the beginning
-            if (sound) {
-                try {
-                    await sound.stopAsync();
-                } catch {
-                    // ignore stop errors and try to replay anyway
-                }
-
-                try {
-                    await sound.setPositionAsync(0);
-                    await sound.playAsync();
-                    return;
-                } catch (error) {
-                    console.error('Error restarting question audio, reloading sound:', error);
-                    // fallthrough to reload sound below
-                }
-            }
-
-            // If no sound is loaded (or restart failed), load a fresh sound and play it
-            const { sound: newSound } = await Audio.Sound.createAsync(
-                { uri: currentQuestion.audioUrl },
-                { shouldPlay: true }
-            );
-            setSound(newSound);
-        } catch (error) {
-            console.error('Error playing question audio:', error);
-        }
-    };
-
-    // Load audio when question changes, with race-safety for very fast navigation
-    const prevQuestionIdRef = useRef<string | null>(null);
-    const audioLoadIdRef = useRef(0);
-
-    useEffect(() => {
-        const loadAndPlayAudio = async () => {
-            const questionId = currentQuestion?.id || null;
-
-            // Only load new audio if question actually changed
-            if (questionId === prevQuestionIdRef.current) {
-                return;
-            }
-
-            prevQuestionIdRef.current = questionId;
-
-            // Increment load id to invalidate any previous pending loads
-            const loadId = ++audioLoadIdRef.current;
-
-            // Unload previous sound snapshot, if any
-            if (sound) {
-                try {
-                    await sound.unloadAsync();
-                } catch (error) {
-                    console.error('Error unloading sound:', error);
-                }
-
-                // If another load started while unloading, do not continue
-                if (audioLoadIdRef.current !== loadId) {
-                    return;
-                }
-
-                setSound(null);
-            }
-
-            // Load and play new audio if not muted and question has audio
-            if (!isMuted && currentQuestion?.audioUrl && questionId) {
-                try {
-                    const { sound: newSound } = await Audio.Sound.createAsync(
-                        { uri: currentQuestion.audioUrl },
-                        { shouldPlay: true }
-                    );
-
-                    // If a newer load was requested while this one was loading, discard this sound
-                    if (audioLoadIdRef.current !== loadId) {
-                        try {
-                            await newSound.unloadAsync();
-                        } catch (error) {
-                            console.error('Error unloading stale sound:', error);
-                        }
-                        return;
-                    }
-
-                    setSound(newSound);
-                } catch (error) {
-                    console.error('Error loading/playing audio:', error);
-                }
-            }
-        };
-
-        loadAndPlayAudio();
-    }, [currentQuestion?.id, isMuted]); // Trigger when question ID or mute changes
 
     const totalQuestions = questions.length;
 
@@ -292,16 +148,6 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
 
     const handleCheck = async () => {
         if (!selectedOption || !sessionId || !rawQuestion || isSubmitting) return;
-
-        // Immediately stop any ongoing question audio so only feedback sounds are heard
-        if (sound) {
-            try {
-                await sound.stopAsync();
-                await sound.setPositionAsync(0);
-            } catch (error) {
-                console.error('Error stopping question audio on check:', error);
-            }
-        }
 
         const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
@@ -378,20 +224,31 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
     };
 
     const handleContinue = async (): Promise<{ isLastQuestion: boolean; completionData?: any }> => {
-        if (currentQuestionIndex < totalQuestions - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-            setSelectedOption(null);
-            setHasAnswered(false);
-            setIsCorrect(false);
-            setQuestionFeedback(null);
-            setShowFeedbackOptions(false);
-            setFeedbackReason(null);
-            setStartTime(Date.now());
+        if (isTransitioning) return { isLastQuestion: false };
+        setIsTransitioning(true);
+
+        try {
+            if (currentQuestionIndex < totalQuestions - 1) {
+                setCurrentQuestionIndex(prev => prev + 1);
+                setSelectedOption(null);
+                setHasAnswered(false);
+                setIsCorrect(false);
+                setQuestionFeedback(null);
+                setShowFeedbackOptions(false);
+                setFeedbackReason(null);
+                setStartTime(Date.now());
+                setIsTransitioning(false);
+                return { isLastQuestion: false };
+            } else {
+                // Complete session when finishing the last question
+                const completionData = await completeSession();
+                setIsTransitioning(false);
+                return { isLastQuestion: true, completionData };
+            }
+        } catch (error) {
+            console.error('Error in handleContinue:', error);
+            setIsTransitioning(false);
             return { isLastQuestion: false };
-        } else {
-            // Complete session when finishing the last question
-            const completionData = await completeSession();
-            return { isLastQuestion: true, completionData };
         }
     };
 
@@ -429,6 +286,7 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         loading,
         isSubmitting,
         initError,
+        isTransitioning,
 
         // Handlers
         handleOptionPress,
@@ -438,8 +296,5 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         handleFeedbackReason,
         // Session
         completeSession,
-        isMuted,
-        toggleMute,
-        playQuestionAudio
     };
 };
