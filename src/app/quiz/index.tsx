@@ -35,19 +35,27 @@ export default function QuizScreen() {
     const quiz = useQuizState(mode, subjectIds);
 
     const [audioEnabled, setAudioEnabled] = useState(true);
+    const [audioSpeed, setAudioSpeed] = useState(1.0);
+
     const audio = useQuizAudio({
         audioUrl: quiz.currentQuestion?.audioUrl,
         isEnabled: audioEnabled,
         autoPlay: true,
+        speed: audioSpeed,
     });
 
     // Load audio preference from AsyncStorage on mount
     useEffect(() => {
         const loadAudioPreference = async () => {
             try {
-                const savedPreference = await AsyncStorage.getItem('quizAudioEnabled');
-                if (savedPreference !== null) {
-                    setAudioEnabled(savedPreference === 'true');
+                const savedEnabled = await AsyncStorage.getItem('quizAudioEnabled');
+                if (savedEnabled !== null) {
+                    setAudioEnabled(savedEnabled === 'true');
+                }
+
+                const savedSpeed = await AsyncStorage.getItem('quizAudioSpeed');
+                if (savedSpeed !== null) {
+                    setAudioSpeed(parseFloat(savedSpeed));
                 }
             } catch (error) {
                 console.error('Error loading audio preference:', error);
@@ -83,6 +91,24 @@ export default function QuizScreen() {
 
         if (audioEnabled) {
             audio.stop();
+        }
+    };
+
+    const handleToggleSpeed = async () => {
+        await Haptics.selectionAsync();
+        // Cycle through speeds: 1.0 -> 1.25 -> 1.5 -> 0.75 -> 1.0
+        let newSpeed = 1.0;
+        if (audioSpeed === 1.0) newSpeed = 1.25;
+        else if (audioSpeed === 1.25) newSpeed = 1.5;
+        else if (audioSpeed === 1.5) newSpeed = 0.75;
+        else newSpeed = 1.0;
+
+        setAudioSpeed(newSpeed);
+
+        try {
+            await AsyncStorage.setItem('quizAudioSpeed', newSpeed.toString());
+        } catch (error) {
+            console.error('Error saving audio speed:', error);
         }
     };
 
@@ -280,6 +306,8 @@ export default function QuizScreen() {
                     isDark={isDark}
                     audioEnabled={audioEnabled}
                     onToggleAudio={handleToggleAudio}
+                    audioSpeed={audioSpeed}
+                    onToggleSpeed={handleToggleSpeed}
                 />
 
                 {/* Scrollable Content */}
@@ -301,6 +329,7 @@ export default function QuizScreen() {
                             isDark={isDark}
                             audioUrl={quiz.currentQuestion.audioUrl}
                             onReplay={handleReplayAudio}
+                            topicName={quiz.currentQuestion.topicName}
                         />
                     </Animated.View>
 
@@ -396,7 +425,6 @@ export default function QuizScreen() {
                 visible={showCompletionScreen}
                 sessionData={sessionCompletionData}
                 onContinue={handleCompletionContinue}
-                isDark={isDark}
             />
 
             <ExitQuizDialog

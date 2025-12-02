@@ -36,12 +36,14 @@ export default function SolidModeSelector({
     selectedMode, 
     onModeSelect, 
     onStartQuiz, 
-    isDark 
+    isDark,
+    onShowModeExplanation,
 }: { 
     selectedMode: QuizModeType; 
     onModeSelect: (m: QuizModeType) => void; 
     onStartQuiz: () => void;
-    isDark: boolean; 
+    isDark: boolean;
+    onShowModeExplanation?: (mode: QuizModeType) => void;
 }) {
     // Theme Constants
     const bg = isDark ? '#18181B' : '#FFFFFF';
@@ -114,7 +116,7 @@ export default function SolidModeSelector({
 
                 {/* --- 3. Call to Action (Bottom Section) --- */}
                 <StartButton 
-                    onPress={onStartQuiz} 
+                    onPress={() => onShowModeExplanation?.(selectedMode) || onStartQuiz()} 
                     color={activeColor} 
                     label={`Start ${currentModeDetails.label}`}
                 />

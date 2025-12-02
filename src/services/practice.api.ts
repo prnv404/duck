@@ -23,6 +23,7 @@ export interface SubmitAnswerDto {
 export interface QuestionResponseDto {
     id: string;
     topicId: string;
+    topicName: string;
     questionText: string;
     explanation?: string;
     difficulty: number;
@@ -107,6 +108,13 @@ class PracticeAPI {
      */
     async completeSession(sessionId: string): Promise<PracticeSessionResponseDto> {
         return await apiClient.post<PracticeSessionResponseDto>(`/practice/sessions/${sessionId}/complete`);
+    }
+
+    /**
+     * Update question vote (upvote/downvote)
+     */
+    async updateQuestionVote(questionId: string, voteType: 'upvote' | 'downvote', reason?: string): Promise<void> {
+        return await apiClient.post<void>(`/questions/${questionId}/vote`, { voteType, reason });
     }
 }
 

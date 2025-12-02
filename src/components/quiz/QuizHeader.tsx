@@ -10,6 +10,8 @@ interface QuizHeaderProps {
     isDark: boolean;
     audioEnabled: boolean;
     onToggleAudio: () => void;
+    audioSpeed: number;
+    onToggleSpeed: () => void;
 }
 
 export const QuizHeader: React.FC<QuizHeaderProps> = ({
@@ -19,6 +21,8 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
     isDark,
     audioEnabled,
     onToggleAudio,
+    audioSpeed,
+    onToggleSpeed,
 }) => {
     return (
         <XStack ai="center" gap="$3" px="$4" py="$2">
@@ -39,6 +43,15 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
                 />
                 <YStack position="absolute" top={3} left={3} right={3} h={3} bg="rgba(255,255,255,0.2)" br={3} />
             </YStack>
+
+            {audioEnabled && (
+                <XStack onPress={onToggleSpeed} bg={isDark ? '#374151' : '#e5e7eb'} px="$2" py="$1" br={6}>
+                    <Text fontSize={12} fontFamily="Nunito_700Bold" color={isDark ? '#d1d5db' : '#4b5563'}>
+                        {audioSpeed}x
+                    </Text>
+                </XStack>
+            )}
+
             <MaterialCommunityIcons
                 name={audioEnabled ? 'volume-high' : 'volume-off'}
                 size={24}

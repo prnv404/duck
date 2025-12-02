@@ -100,14 +100,25 @@ export default function HomeScreen() {
   const nextLevelXp = displayStats.xp + displayStats.xpToNextLevel;
   const xpProgress = nextLevelXp > 0 ? Math.round((currentLevelXp / nextLevelXp) * 100) : 0;
 
+  const handleShowModeExplanation = async (mode: 'adaptive' | 'balanced' | 'weak_area' | 'hard_core' | 'subject_focus') => {
+    await Haptics.selectionAsync();
+    // Navigate to full-screen explanation route
+    router.push(`/quiz/mode-explain?mode=${mode}` as any);
+  };
+
   const handleStartQuiz = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     router.push(`/quiz?mode=${selectedMode}` as any);
   };
 
+  const handleUnlockAndStart = async () => {
+    // Directly start quiz (previously used to close modal then start)
+    await handleStartQuiz();
+  };
+
   if (loading) {
     return (
-      <YStack f={1} bg={isDark ? '#100f0fff' : '#ffffff'}>
+      <YStack f={1} bg={isDark ? '#282626ff' : '#ffffff'}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
@@ -142,6 +153,7 @@ export default function HomeScreen() {
               onModeSelect={setSelectedMode}
               onStartQuiz={handleStartQuiz}
               isDark={isDark}
+              onShowModeExplanation={handleShowModeExplanation}
             />
 
             {/* Focus Areas */}
@@ -165,7 +177,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <YStack f={1} bg={isDark ? '#090808ff' : '#fafef9ff'}>
+    <YStack f={1} bg={isDark ? '#120f0fff' : '#fafef9ff'}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
@@ -200,6 +212,7 @@ export default function HomeScreen() {
             onModeSelect={setSelectedMode}
             onStartQuiz={handleStartQuiz}
             isDark={isDark}
+            onShowModeExplanation={handleShowModeExplanation}
           />
 
           {/* Focus Areas */}
@@ -216,6 +229,8 @@ export default function HomeScreen() {
 
         </YStack>
       </ScrollView>
+
+      {/* Explanation is now a full screen route at /quiz/mode-explain */}
 
     </YStack>
 

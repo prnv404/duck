@@ -10,6 +10,7 @@ interface QuestionCardProps {
     isDark: boolean;
     audioUrl?: string;
     onReplay: () => void;
+    topicName?: string;
 }
 
 export const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -19,6 +20,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     isDark,
     audioUrl,
     onReplay,
+    topicName,
 }) => {
     const handleReplay = async () => {
         await Haptics.selectionAsync();
@@ -37,15 +39,50 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 >
                     Question {currentIndex + 1}/{totalQuestions}
                 </Text>
-                {audioUrl && (
+                {audioUrl ? (
                     <MaterialCommunityIcons
                         name="replay"
                         size={22}
                         color={isDark ? '#6b7280' : '#9ca3af'}
                         onPress={handleReplay}
                     />
+                ) : (
+                    <XStack ai="center" gap="$1.5" bg={isDark ? '#1f2937' : '#f3f4f6'} px="$2" py="$1" br={6}>
+                        <MaterialCommunityIcons name="clock-outline" size={12} color={isDark ? '#9ca3af' : '#6b7280'} />
+                        <Text fontSize={10} fontFamily="Nunito_700Bold" color={isDark ? '#9ca3af' : '#6b7280'}>
+                            AUDIO UPCOMING
+                        </Text>
+                    </XStack>
                 )}
             </XStack>
+
+            {topicName && (
+                <XStack
+                    bg={isDark ? '#1f2937' : '#e0f2fe'}
+                    px="$3"
+                    py="$1.5"
+                    br={8}
+                    mb="$3"
+                    ai="center"
+                    gap="$2"
+                    alignSelf="flex-start"
+                    borderWidth={1}
+                    borderColor={isDark ? '#374151' : '#bae6fd'}
+                >
+                    <MaterialCommunityIcons
+                        name="bookmark-outline"
+                        size={16}
+                        color={isDark ? '#58cc02' : '#0284c7'}
+                    />
+                    <Text
+                        fontSize={12}
+                        fontFamily="Nunito_600SemiBold"
+                        color={isDark ? '#9ca3af' : '#0c4a6e'}
+                    >
+                        {topicName}
+                    </Text>
+                </XStack>
+            )}
 
             <Text
                 fontSize={22}

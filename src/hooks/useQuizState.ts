@@ -1,6 +1,5 @@
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer, AudioSource, setAudioModeAsync } from 'expo-audio';
-import { Audio } from 'expo-av';
 import { useState, useEffect, useMemo } from 'react';
 import { practiceAPI, QuestionResponseDto, QuestionPreferenceType } from '@/services/practice.api';
 import { Alert } from 'react-native';
@@ -12,6 +11,7 @@ export interface Question {
     correctAnswer: string;
     explanation?: string;
     audioUrl?: string;
+    topicName?: string;
 }
 
 
@@ -103,18 +103,13 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         initSession();
     }, [mode, subjectIds?.join(',')]);
 
-    // Configure Audio Mode
+    // Configure Audio Mode using expo-audio
     useEffect(() => {
         const setupAudio = async () => {
             try {
                 await setAudioModeAsync({
                     playsInSilentMode: true,
                     allowsRecording: false,
-                });
-                // Also setup expo-av just in case, though they might share underlying session
-                await Audio.setAudioModeAsync({
-                    playsInSilentModeIOS: true,
-                    staysActiveInBackground: false,
                 });
             } catch (error) {
                 console.error('Error setting up audio mode:', error);
@@ -135,6 +130,7 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         correctAnswer: rawQuestion.answerOptions.find(o => o.isCorrect)?.optionText || '',
         explanation: rawQuestion.explanation,
         audioUrl: rawQuestion.audioUrl || undefined,
+        topicName: rawQuestion.topicName,
     } : null;
 
     const totalQuestions = questions.length;
@@ -169,12 +165,27 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         setIsCorrect(locallyCorrect);
         setHasAnswered(true);
 
-        // Play Sound based on local correctness
+        // Play Sound based on local correctness using expo-audio
         try {
+            // Stop both players first to prevent overlap
+            try {
+                correctPlayer.pause();
+                incorrectPlayer.pause();
+            } catch (e) {
+                // Ignore pause errors - player might not be playing
+            }
+
             const playerToUse = locallyCorrect ? correctPlayer : incorrectPlayer;
-            // Reset to beginning and play
-            playerToUse.seekTo(0);
-            playerToUse.play();
+
+            // Small delay to ensure cleanup, then play
+            setTimeout(() => {
+                try {
+                    playerToUse.seekTo(0);
+                    playerToUse.play();
+                } catch (playError) {
+                    console.warn('Could not play feedback sound:', playError);
+                }
+            }, 50);
         } catch (error) {
             console.error('Error playing sound:', error);
             // Continue without audio - non-critical feature
@@ -259,7 +270,15 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         if (type === 'like') {
             setShowFeedbackOptions(false);
             setFeedbackReason(null);
-            console.log('Question liked:', rawQuestion?.id);
+
+            // Call API to update upvote
+            if (sessionId && rawQuestion) {
+                try {
+                    await practiceAPI.updateQuestionVote(rawQuestion.id, 'upvote');
+                } catch (error) {
+                    console.error('Error updating question vote:', error);
+                }
+            }
         } else {
             setShowFeedbackOptions(true);
         }
@@ -268,7 +287,15 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
     const handleFeedbackReason = async (reason: string) => {
         await Haptics.selectionAsync();
         setFeedbackReason(reason);
-        console.log('Question disliked:', rawQuestion?.id, 'Reason:', reason);
+
+        // Call API to update downvote with reason
+        if (sessionId && rawQuestion) {
+            try {
+                await practiceAPI.updateQuestionVote(rawQuestion.id, 'downvote', reason);
+            } catch (error) {
+                console.error('Error updating question vote:', error);
+            }
+        }
     };
 
     return {

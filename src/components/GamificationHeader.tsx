@@ -78,13 +78,7 @@ export default function GamificationHeader({ streak, xp, energy = 'unlimited', u
                         </XStack>
                     </Animated.View>
 
-                    {/* Energy */}
-                    <XStack ai="center" gap="$1.5">
-                        <MaterialCommunityIcons name="lightning-bolt" size={22} color="#a855f7" />
-                        <Text fontSize={17} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#000000'}>
-                            {energy === 'unlimited' ? '∞' : energy}
-                        </Text>
-                    </XStack>
+                   
                 </XStack>
             </XStack>
 

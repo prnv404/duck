@@ -5,21 +5,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { YStack } from 'tamagui';
-import { BusinessPitchSlide } from '@/components/onboarding/BusinessPitchSlide';
-import { ValuePropSlide } from '@/components/onboarding/ValuePropSlide';
-import { JourneySlide } from '@/components/onboarding/JourneySlide';
-import { IdentitySlide } from '@/components/onboarding/IdentitySlide';
+import { ProductIntroSlide } from '@/components/onboarding/ProductIntroSlide';
+import { DailyPracticeSlide } from '@/components/onboarding/DailyPracticeSlide';
+import { TrackProgressSlide } from '@/components/onboarding/TrackProgressSlide';
+import { GamifiedLearningSlide } from '@/components/onboarding/GamifiedLearningSlide';
+import { StartJourneySlide } from '@/components/onboarding/StartJourneySlide';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { userAPI } from '@/services/user.api';
 
-const SLIDES = ['pitch', 'structure', 'journey', 'identity'] as const;
 
+const SLIDES = ['welcome', 'dailyPractice', 'trackProgress', 'gamified', 'startJourney'] as const;
 type SlideKey = (typeof SLIDES)[number];
 
 export default function OnboardingScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
-    const [currentScreen, setCurrentScreen] = useState<SlideKey>('pitch');
+    const [currentScreen, setCurrentScreen] = useState<SlideKey>('welcome');
     const [name, setName] = useState('');
     const totalSteps = SLIDES.length;
 
@@ -73,12 +74,13 @@ export default function OnboardingScreen() {
 
     const isDark = colorScheme === 'dark';
 
+
     const renderSlide = () => {
         const step = currentIndex + 1;
         switch (currentScreen) {
-            case 'pitch':
+            case 'welcome':
                 return (
-                    <BusinessPitchSlide
+                    <ProductIntroSlide
                         isDark={isDark}
                         onNext={handleNext}
                         onSkip={handleSkip}
@@ -86,20 +88,9 @@ export default function OnboardingScreen() {
                         totalSteps={totalSteps}
                     />
                 );
-            case 'structure':
+            case 'dailyPractice':
                 return (
-                    <ValuePropSlide
-                        isDark={isDark}
-                        onNext={handleNext}
-                        onBack={handleBack}
-                        onSkip={handleSkip}
-                        step={step}
-                        totalSteps={totalSteps}
-                    />
-                );
-            case 'journey':
-                return (
-                    <JourneySlide
+                    <DailyPracticeSlide
                         isDark={isDark}
                         onNext={handleNext}
                         onBack={handleBack}
@@ -108,10 +99,32 @@ export default function OnboardingScreen() {
                         totalSteps={totalSteps}
                     />
                 );
-            case 'identity':
+            case 'trackProgress':
+                return (
+                    <TrackProgressSlide
+                        isDark={isDark}
+                        onNext={handleNext}
+                        onBack={handleBack}
+                        onSkip={handleSkip}
+                        step={step}
+                        totalSteps={totalSteps}
+                    />
+                );
+            case 'gamified':
+                return (
+                    <GamifiedLearningSlide
+                        isDark={isDark}
+                        onNext={handleNext}
+                        onBack={handleBack}
+                        onSkip={handleSkip}
+                        step={step}
+                        totalSteps={totalSteps}
+                    />
+                );
+            case 'startJourney':
             default:
                 return (
-                    <IdentitySlide
+                    <StartJourneySlide
                         isDark={isDark}
                         name={name}
                         setName={setName}

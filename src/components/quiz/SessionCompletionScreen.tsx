@@ -4,12 +4,12 @@ import { useAudioPlayer } from 'expo-audio';
 import { useEffect, useState } from 'react';
 import { Modal } from 'react-native';
 import Animated, {
+    FadeIn,
     FadeInDown,
-    ZoomIn,
-    FadeOut,
-    SlideOutDown,
 } from 'react-native-reanimated';
 import { Text, XStack, YStack, Button } from 'tamagui';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SessionCompletionScreenProps {
     visible: boolean;
@@ -23,347 +23,316 @@ interface SessionCompletionScreenProps {
         timeSpentSeconds: number;
     } | null;
     onContinue: () => void;
-    isDark: boolean;
 }
 
-const CountUp = ({ value, suffix = '', style }: { value: number, suffix?: string, style?: any }) => {
+// Animated counter component
+const AnimatedCounter = ({
+    value,
+    delay = 0,
+    fontSize = 56,
+    color,
+    suffix = ''
+}: {
+    value: number;
+    delay?: number;
+    fontSize?: number;
+    color: string;
+    suffix?: string;
+}) => {
     const [displayValue, setDisplayValue] = useState(0);
 
     useEffect(() => {
-        let start = 0;
-        const end = value;
-        const duration = 1500;
-        const startTime = Date.now();
+        const timer = setTimeout(() => {
+            let current = 0;
+            const increment = value / 25;
+            const interval = setInterval(() => {
+                current += increment;
+                if (current >= value) {
+                    setDisplayValue(value);
+                    clearInterval(interval);
+                } else {
+                    setDisplayValue(Math.floor(current));
+                }
+            }, 35);
+            return () => clearInterval(interval);
+        }, delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
 
-        const frame = () => {
-            const now = Date.now();
-            const progress = Math.min((now - startTime) / duration, 1);
-            // Ease out quart
-            const ease = 1 - Math.pow(1 - progress, 4);
+    return (
+        <Text
+            fontSize={fontSize}
+            fontFamily="Nunito_900Black"
+            color={color}
+            letterSpacing={-2}
+        >
+            {displayValue}{suffix}
+        </Text>
+    );
+};
 
-            const current = Math.floor(start + (end - start) * ease);
-            setDisplayValue(current);
+// Stat Card Component
+const StatCard = ({
+    icon,
+    value,
+    label,
+    iconColor,
+    delay = 0
+}: {
+    icon: string;
+    value: string | number;
+    label: string;
+    iconColor: string;
+    delay?: number;
+}) => {
+    const theme = useColorScheme();
+    const isDark = theme === 'dark';
 
-            if (progress < 1) {
-                requestAnimationFrame(frame);
-            }
-        };
+    const cardBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.04)';
+    const borderColor = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+    const textColor = isDark ? '#fafafa' : '#18181b';
+    const labelColor = isDark ? '#d4d4d8' : '#71717a';
 
-        requestAnimationFrame(frame);
-    }, [value]);
-
-    return <Text style={style}>{displayValue}{suffix}</Text>;
+    return (
+        <Animated.View
+            entering={FadeInDown.delay(delay).springify().damping(15)}
+            style={{ flex: 1 }}
+        >
+            <YStack
+                f={1}
+                bg={cardBg}
+                borderWidth={1}
+                borderColor={borderColor}
+                br={20}
+                p="$3"
+                ai="center"
+                jc="center"
+                gap="$1.5"
+                minHeight={110}
+            >
+                <MaterialCommunityIcons name={icon as any} size={28} color={iconColor} />
+                <Text
+                    fontSize={28}
+                    fontFamily="Nunito_900Black"
+                    color={textColor}
+                    letterSpacing={-1}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                >
+                    {value}
+                </Text>
+                <Text
+                    fontSize={12}
+                    fontFamily="Nunito_700Bold"
+                    color={labelColor}
+                    textTransform="uppercase"
+                    letterSpacing={0.5}
+                >
+                    {label}
+                </Text>
+            </YStack>
+        </Animated.View>
+    );
 };
 
 export default function SessionCompletionScreen({
     visible,
     sessionData,
     onContinue,
-    isDark,
 }: SessionCompletionScreenProps) {
-    const [isExiting, setIsExiting] = useState(false);
-
-    // Initialize audio player with the reward sound
+    const theme = useColorScheme();
+    const isDark = theme === 'dark';
+    const insets = useSafeAreaInsets();
     const player = useAudioPlayer(require('../../../assets/audio/reward.mp3'));
 
     useEffect(() => {
         if (visible && sessionData) {
-            setIsExiting(false);
-            const playSequence = async () => {
-                // Audio
+            setTimeout(() => {
                 try {
                     player.seekTo(0);
                     player.play();
-                } catch (error) {
-                    console.log('Error playing sound:', error);
-                }
-
-                // Haptics
-                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium), 400);
-                setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 800);
-            };
-            playSequence();
+                } catch (e) { }
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }, 300);
         }
     }, [visible, sessionData]);
 
-    const handleContinue = () => {
-        setIsExiting(true);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setTimeout(() => {
-            onContinue();
-        }, 300);
-    };
-
     if (!sessionData) return null;
 
-    const { correctAnswers, questionsAttempted, wrongAnswers, accuracy = 0, xpEarned, timeSpentSeconds, totalQuestions } = sessionData;
-
+    const { correctAnswers, questionsAttempted, wrongAnswers, accuracy = 0, xpEarned, timeSpentSeconds } = sessionData;
     const accuracyValue = typeof accuracy === 'number' ? accuracy : parseFloat(accuracy || '0');
 
     const minutes = Math.floor(timeSpentSeconds / 60);
     const seconds = timeSpentSeconds % 60;
     const timeDisplay = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 
-    // Motivational Message Logic
-    let title = 'Good Job!';
-    let subtitle = 'You completed the practice!';
-    let titleColor = '#3b82f6'; // blue
+    // Performance evaluation
+    let performanceEmoji = '🎯';
+    let performanceTitle = 'Good Effort';
+    let performanceSubtitle = 'Keep practicing to improve';
+    const buttonBg = isDark ? '#fafafa' : '#18181b';
+    const buttonText = isDark ? '#18181b' : '#fafafa';
 
     if (accuracyValue >= 90) {
-        title = 'Perfect!';
-        subtitle = 'You are unstoppable!';
-        titleColor = '#eab308'; // yellow
-    } else if (accuracyValue >= 70) {
-        title = 'Great Job!';
-        subtitle = 'Keep up the momentum!';
-        titleColor = '#22c55e'; // green
+        performanceEmoji = '🏆';
+        performanceTitle = 'Outstanding';
+        performanceSubtitle = 'You absolutely nailed it!';
+    } else if (accuracyValue >= 75) {
+        performanceEmoji = '⭐';
+        performanceTitle = 'Excellent';
+        performanceSubtitle = 'Great performance!';
+    } else if (accuracyValue >= 50) {
+        performanceEmoji = '💪';
+        performanceTitle = 'Well Done';
+        performanceSubtitle = 'You\'re making solid progress';
     }
 
-    const topStats = [
-        {
-            label: 'Total',
-            value: totalQuestions,
-            icon: 'format-list-bulleted',
-            color: '#8b5cf6',
-            delay: 300
-        },
-        {
-            label: 'Mistakes',
-            value: wrongAnswers,
-            icon: 'alert-circle',
-            color: '#ef4444',
-            delay: 400
-        },
-    ];
-
-    const bottomStats = [
-        {
-            label: 'XP Earned',
-            value: xpEarned,
-            suffix: '',
-            icon: 'lightning-bolt',
-            color: '#facc15',
-            delay: 500
-        },
-        {
-            label: 'Accuracy',
-            value: accuracyValue,
-            suffix: '%',
-            icon: 'target',
-            color: '#3b82f6',
-            delay: 600
-        },
-        {
-            label: 'Time',
-            value: timeDisplay,
-            isString: true,
-            icon: 'clock-outline',
-            color: '#ec4899',
-            delay: 700
-        },
-    ];
-
-    const bg = isDark ? '#020617' : '#ffffff';
-    const cardBg = isDark ? '#1e293b' : '#f8fafc';
-    const borderColor = isDark ? '#334155' : '#e2e8f0';
-    const textColor = isDark ? '#f8fafc' : '#0f172a';
+    // Theme colors
+    const bgColor = isDark ? '#09090b' : '#fafafa';
+    const textColor = isDark ? '#fafafa' : '#09090b';
+    const subtitleColor = isDark ? '#d4d4d8' : '#71717a';
+    const scoreColor = isDark ? '#fafafa' : '#18181b';
+    const correctColor = isDark ? '#22c55e' : '#16a34a';
+    const wrongColor = isDark ? '#ef4444' : '#dc2626';
+    const timeColor = isDark ? '#60a5fa' : '#3b82f6';
 
     return (
-        <Modal
-            visible={visible}
-            animationType="fade"
-            statusBarTranslucent
-            presentationStyle="fullScreen"
-            transparent={false}
-        >
-            <YStack f={1} bg={bg} pt="$8" pb="$6" px="$5" jc="space-between">
-
-                <YStack ai="center" w="100%">
-                    {/* Header */}
-                    <Animated.View entering={FadeInDown.duration(600).springify()} exiting={FadeOut.duration(200)}>
-                        <Text
-                            fontSize={32}
-                            fontFamily="Nunito_900Black"
-                            color="#58cc02"
-                            textAlign="center"
-                            mb="$5"
-                        >
-                            Practice Complete!
-                        </Text>
-                    </Animated.View>
-
-                    {/* Hero */}
-                    <Animated.View entering={ZoomIn.delay(200).duration(600).springify()} exiting={FadeOut.duration(200)}>
-                        <YStack
-                            w={120}
-                            h={120}
-                            bg={isDark ? '#334155' : '#dcfce7'}
-                            br={999}
-                            ai="center"
-                            jc="center"
-                            borderWidth={5}
-                            borderColor="#58cc02"
-                            mb="$5"
-                        >
-                            <MaterialCommunityIcons
-                                name="trophy"
-                                size={70}
-                                color="#58cc02"
-                            />
-                        </YStack>
-                    </Animated.View>
-
-                    {/* Top Stats (Total & Mistakes) - Compact */}
-                    <XStack gap="$2.5" mb="$4" w="100%">
-                        {topStats.map((stat, index) => (
-                            <Animated.View
-                                key={stat.label}
-                                entering={FadeInDown.delay(stat.delay).springify()}
-                                exiting={FadeOut.duration(200)}
-                                style={{ flex: 1 }}
-                            >
-                                <YStack
-                                    bg={cardBg}
-                                    px="$3"
-                                    py="$3"
-                                    br={16}
-                                    borderWidth={2}
-                                    borderColor={borderColor}
-                                    ai="center"
-                                    style={{ borderBottomWidth: 4 }}
-                                >
-                                    <Text
-                                        fontSize={11}
-                                        fontFamily="Nunito_700Bold"
-                                        color={stat.color}
-                                        textTransform="uppercase"
-                                        mb="$1"
-                                    >
-                                        {stat.label}
-                                    </Text>
-                                    <Text
-                                        fontSize={24}
-                                        fontFamily="Nunito_900Black"
-                                        color={textColor}
-                                    >
-                                        {stat.value}
-                                    </Text>
-                                </YStack>
-                            </Animated.View>
-                        ))}
-                    </XStack>
-
-                    {/* Motivational Message - Compact */}
-                    <Animated.View entering={ZoomIn.delay(450).springify()} exiting={FadeOut.duration(200)}>
-                        <YStack ai="center" gap="$1" mb="$4">
-                            <Text
-                                fontSize={26}
-                                fontFamily="Nunito_900Black"
-                                color={titleColor}
-                                textAlign="center"
-                            >
-                                {title}
-                            </Text>
-                            <Text
-                                fontSize={15}
-                                fontFamily="Nunito_700Bold"
-                                color={isDark ? '#94a3b8' : '#64748b'}
-                                textAlign="center"
-                            >
-                                {subtitle}
-                            </Text>
-                        </YStack>
-                    </Animated.View>
-
-                    {/* Bottom Stats (XP, Accuracy, Time) - Compact */}
-                    <XStack gap="$2.5" w="100%">
-                        {bottomStats.map((stat, index) => (
-                            <Animated.View
-                                key={stat.label}
-                                entering={FadeInDown.delay(stat.delay).springify()}
-                                exiting={FadeOut.duration(200)}
-                                style={{ flex: 1 }}
-                            >
-                                <YStack
-                                    bg={cardBg}
-                                    p="$2.5"
-                                    br={16}
-                                    borderWidth={2}
-                                    borderColor={borderColor}
-                                    ai="center"
-                                    gap="$1"
-                                    h={95}
-                                    jc="center"
-                                    style={{ borderBottomWidth: 4 }}
-                                >
-                                    <MaterialCommunityIcons
-                                        name={stat.icon as any}
-                                        size={22}
-                                        color={stat.color}
-                                    />
-                                    <Text
-                                        fontSize={10}
-                                        fontFamily="Nunito_700Bold"
-                                        color={isDark ? '#94a3b8' : '#64748b'}
-                                        textTransform="uppercase"
-                                    >
-                                        {stat.label}
-                                    </Text>
-                                    {stat.isString ? (
-                                        <Text
-                                            fontSize={14}
-                                            fontFamily="Nunito_900Black"
-                                            color={textColor}
-                                            numberOfLines={1}
-                                            adjustsFontSizeToFit
-                                        >
-                                            {stat.value}
-                                        </Text>
-                                    ) : (
-                                        <CountUp
-                                            value={stat.value as number}
-                                            suffix={stat.suffix}
-                                            style={{
-                                                fontSize: 16,
-                                                fontFamily: "Nunito_900Black",
-                                                color: textColor
-                                            }}
-                                        />
-                                    )}
-                                </YStack>
-                            </Animated.View>
-                        ))}
-                    </XStack>
-                </YStack>
-
-                {/* Footer - Closer to stats */}
-                <Animated.View
-                    entering={FadeInDown.delay(900).springify()}
-                    exiting={SlideOutDown.duration(300)}
-                    style={{ width: '100%', marginTop: 24 }}
+        <Modal visible={visible} animationType="fade" statusBarTranslucent transparent={false}>
+            <YStack f={1} bg={bgColor}>
+                <YStack
+                    f={1}
+                    pt={insets.top + 40}
+                    pb={Math.max(insets.bottom, 20) + 20}
+                    px="$5"
+                    gap="$6"
+                    jc="space-between"
                 >
-                    <Button
-                        size="$5"
-                        bg="#58cc02"
-                        onPress={handleContinue}
-                        pressStyle={{ scale: 0.96, opacity: 0.9 }}
-                        br={16}
-                        h={56}
-                        borderBottomWidth={4}
-                        borderColor="#46a302"
+                    {/* Header Section */}
+                    <YStack ai="center" gap="$3" mt="$8">
+                        <Animated.View entering={FadeIn.duration(500).delay(100)}>
+                            <Text fontSize={80} lineHeight={80}>{performanceEmoji}</Text>
+                        </Animated.View>
+
+                        <Animated.View entering={FadeInDown.delay(300).springify()}>
+                            <YStack ai="center" gap="$1.5">
+                                <Text
+                                    fontSize={36}
+                                    fontFamily="Nunito_900Black"
+                                    color={textColor}
+                                    textAlign="center"
+                                    letterSpacing={-1.5}
+                                >
+                                    {performanceTitle}
+                                </Text>
+                                <Text
+                                    fontSize={15}
+                                    fontFamily="Nunito_600SemiBold"
+                                    color={subtitleColor}
+                                    textAlign="center"
+                                >
+                                    {performanceSubtitle}
+                                </Text>
+                            </YStack>
+                        </Animated.View>
+                    </YStack>
+
+                    {/* Main Score Display */}
+                    <Animated.View
+                        entering={FadeInDown.delay(500).springify()}
+                        style={{ width: '100%', alignItems: 'center' }}
                     >
-                        <Text
-                            fontSize={18}
-                            fontFamily="Nunito_800ExtraBold"
-                            color="#ffffff"
-                            textTransform="uppercase"
-                            letterSpacing={0.5}
+                        <YStack ai="center" gap="$1">
+                            <Text
+                                fontSize={13}
+                                fontFamily="Nunito_700Bold"
+                                color={subtitleColor}
+                                textTransform="uppercase"
+                                letterSpacing={1}
+                            >
+                                Accuracy
+                            </Text>
+                            <XStack ai="flex-end" gap="$1">
+                                <AnimatedCounter
+                                    value={accuracyValue}
+                                    delay={50}
+                                    fontSize={72}
+                                    color={scoreColor}
+                                />
+                                <Text
+                                    fontSize={40}
+                                    fontFamily="Nunito_900Black"
+                                    color={scoreColor}
+                                    mb="$1"
+                                    letterSpacing={-1}
+                                >
+                                    %
+                                </Text>
+                            </XStack>
+                            <Text
+                                fontSize={16}
+                                fontFamily="Nunito_700Bold"
+                                color={subtitleColor}
+                            >
+                                {correctAnswers} of {questionsAttempted} correct
+                            </Text>
+                        </YStack>
+                    </Animated.View>
+
+                    {/* Stats Grid */}
+                    <XStack gap="$3" w="100%" bottom={25}>
+                        <StatCard
+                            icon="check-circle"
+                            value={correctAnswers}
+                            label="Correct"
+                            iconColor={correctColor}
+                            delay={500}
+                        />
+                        <StatCard
+                            icon="close-circle"
+                            value={wrongAnswers}
+                            label="Wrong"
+                            iconColor={wrongColor}
+                            delay={500}
+                        />
+                        <StatCard
+                            icon="clock-outline"
+                            value={timeDisplay}
+                            label="Time"
+                            iconColor={timeColor}
+                            delay={500}
+                        />
+                    </XStack>
+
+                    {/* Continue Button */}
+                    <Animated.View
+                        entering={FadeInDown.delay(1100).springify()}
+                        style={{ width: '100%' }}
+                    >
+                        <Button
+                            size="$5"
+                            bg={buttonBg}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                onContinue();
+                            }}
+                            pressStyle={{
+                                scale: 0.97,
+                                opacity: 0.9
+                            }}
+                            br={18}
+                            h={60}
                         >
-                            Continue
-                        </Text>
-                    </Button>
-                </Animated.View>
+                            <Text
+                                fontSize={17}
+                                fontFamily="Nunito_800ExtraBold"
+                                color={buttonText}
+                                letterSpacing={0.3}
+                            >
+                                Continue
+                            </Text>
+                        </Button>
+                    </Animated.View>
+                </YStack>
             </YStack>
         </Modal>
     );

@@ -26,7 +26,8 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
     onContinue,
     isDark
 }) => {
-    const isDisabled = !selectedOption || isSubmitting || isFinishing;
+    // Only disable if no option selected or finishing session. Don't block on isSubmitting (async submission)
+    const isDisabled = !selectedOption && !hasAnswered || isFinishing;
 
     return (
         <YStack
@@ -51,7 +52,7 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
                         : (selectedOption ? '#46a302' : (isDark ? '#1f2937' : '#d1d5db'))
                     }
                     h={52}
-                    opacity={isDisabled && !hasAnswered ? 0.6 : 1}
+                    opacity={!selectedOption && !hasAnswered ? 0.6 : 1}
                 >
                     {isFinishing ? (
                         <XStack ai="center" gap="$2">
@@ -64,6 +65,19 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
                                 letterSpacing={0.5}
                             >
                                 Finishing...
+                            </Text>
+                        </XStack>
+                    ) : isSubmitting && !hasAnswered ? (
+                        <XStack ai="center" gap="$2">
+                            <ActivityIndicator size="small" color="#ffffff" />
+                            <Text
+                                fontSize={18}
+                                fontFamily="Nunito_800ExtraBold"
+                                color="#ffffff"
+                                textTransform="uppercase"
+                                letterSpacing={0.5}
+                            >
+                                Checking...
                             </Text>
                         </XStack>
                     ) : (
