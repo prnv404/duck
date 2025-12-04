@@ -12,37 +12,37 @@ type Mode = 'adaptive' | 'balanced' | 'weak_area' | 'hard_core' | 'subject_focus
 
 const MODE_DETAILS: Record<
   Mode,
-  { label: string; color: string; description: string; emoji: string }
+  { label: string; color: string; description: string; icon: any }
 > = {
   adaptive: {
     label: 'Adaptive Mode',
-    color: '#51cb4dff',
-    description: 'Questions adapt to your skill level in real-time',
-    emoji: '🧠',
+    color: '#6ac467ff',
+    description: 'Questions adapt to your skill level',
+    icon: require('../../../assets/images/modes/brain.png'),
   },
   balanced: {
     label: 'Balanced Mode',
     color: '#8B5CF6',
     description: 'Perfect mix of easy, medium, and hard questions',
-    emoji: '⚖️',
+    icon: require('../../../assets/images/modes/libra.png'),
   },
   weak_area: {
     label: 'Weak Spots',
     color: '#F59E0B',
     description: 'Focus on topics where you need improvement',
-    emoji: '🎯',
+    icon: require('../../../assets/images/modes/weakness.png'),
   },
   hard_core: {
     label: 'Hardcore Mode',
     color: '#EF4444',
     description: 'Challenge yourself with the toughest questions',
-    emoji: '🔥',
+    icon: require('../../../assets/images/modes/sign.png'),
   },
   subject_focus: {
     label: 'Subject Focus',
     color: '#06B6D4',
     description: 'Master one subject at a time',
-    emoji: '📚',
+    icon: require('../../../assets/images/modes/brain.png'),
   },
 };
 
@@ -128,7 +128,14 @@ export default function ModeExplainScreen() {
         <YStack f={1} jc="center" ai="center" gap="$4" mt={-60}>
           {/* Icon */}
           <Animated.View entering={FadeInDown.delay(100).springify()}>
-            <Text fontSize={80}>{details.emoji}</Text>
+            <YStack width={100} height={100} ai="center" jc="center">
+              <Image
+                source={details.icon}
+                width={100}
+                height={100}
+                resizeMode="contain"
+              />
+            </YStack>
           </Animated.View>
 
           {/* Title */}
@@ -177,8 +184,7 @@ export default function ModeExplainScreen() {
               maxWidth={280}
               opacity={0.7}
             >
-              DUCK is completely free. Our mission: help you practice for exams with ease.
-            </Text>
+We’re here to make boring exam prep fun and enjoyable.            </Text>
           </Animated.View>
         </YStack>
 
@@ -230,7 +236,7 @@ export default function ModeExplainScreen() {
                   color={textSecondary}
                   style={{ opacity: 0.85 }}
                 >
-                 Got any feedback? connect me on Insta
+                  Got any feedback? connect me on Insta
                 </Text>
                 <MaterialCommunityIcons name="chevron-right" size={18} color={textSecondary} />
               </XStack>

@@ -36,7 +36,7 @@ export const QuizHeader: React.FC<QuizHeaderProps> = ({
                 <Animated.View
                     style={{
                         height: '100%',
-                        backgroundColor: '#58cc02',
+                        backgroundColor: isDark ? '#16a34a' : '#22c55e',
                         width: `${((currentQuestion + 1) / totalQuestions) * 100}%`,
                         borderRadius: 8,
                     }}

@@ -1,6 +1,6 @@
 import React from 'react';
-import { YStack, XStack, Text, Spinner } from 'tamagui';
-import { StyleSheet, Image, Pressable } from 'react-native';
+import { YStack, XStack, Text } from 'tamagui';
+import { StyleSheet, Image, Pressable, ActivityIndicator } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -34,14 +34,14 @@ export function GoogleSignInButton({
                 ]}
             >
                 <LinearGradient
-                    colors={isDark ? ['#ffffff', '#f8f9fa'] : ['#0e0f0fff', '#131517ff']}
+                    colors={isDark ? ['#ffffff', '#a8a9abff'] : ['#0e0f0fff', '#131517ff']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={[
                         StyleSheet.absoluteFill,
                         {
                             borderRadius: 16,
-                            shadowColor: isDark ? '#10b981' : '#000',
+                            shadowColor: isDark ? '#fafafaff' : '#000',
                             shadowOffset: { width: 0, height: 6 },
                             shadowOpacity: isDark ? 0.3 : 0.15,
                             shadowRadius: 16,
@@ -49,24 +49,34 @@ export function GoogleSignInButton({
                         },
                     ]}
                 />
-                <XStack alignItems="center" justifyContent="center" gap="$3" zIndex={1}>
-                    {loading ? (
-                        <Spinner size="small" color={isDark ? '#10b981' : '#ffffff'} />
-                    ) : (
+                <XStack
+                    alignItems="center"
+                    justifyContent="center"
+                    gap="$3"
+                    zIndex={1}
+                    width="100%"
+                    paddingHorizontal="$4"
+                >
+                    {!loading && (
                         <Image
                             source={require('../../../assets/images/google.png')}
                             style={{ width: 24, height: 24 }}
                             resizeMode="contain"
                         />
                     )}
-                    <Text
-                        fontFamily="Nunito_900Black"
-                        fontSize={18}
-                        color={isDark ? '#1f2937' : '#ffffff'}
-                        letterSpacing={-0.5}
-                    >
-                        {loading ? 'Signing you in...' : 'Continue with Google'}
-                    </Text>
+                    <XStack alignItems="center" gap="$2">
+                        {loading && (
+                            <ActivityIndicator size="small" color={isDark ? '#0a0f0dff' : '#ffffff'} />
+                        )}
+                        <Text
+                            fontFamily="Nunito_900Black"
+                            fontSize={18}
+                            color={isDark ? '#111315ff' : '#ffffff'}
+                            letterSpacing={-0.5}
+                        >
+                            {loading ? 'Signing you in...' : 'Continue with Google'}
+                        </Text>
+                    </XStack>
                 </XStack>
             </Pressable>
 

@@ -84,7 +84,7 @@ export default function FocusAreas({
                         fontFamily="Nunito_800ExtraBold"
                         color={textMain}
                     >
-                        📊 Subject Performance
+                        Subject Performance
                     </Text>
                     <Text fontSize={12} fontFamily="Nunito_600SemiBold" color={textSub}>
                         Your accuracy across subjects

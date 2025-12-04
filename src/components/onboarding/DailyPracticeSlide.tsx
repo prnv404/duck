@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text, XStack, YStack } from 'tamagui';
+import { Image } from 'expo-image';
 
 interface DailyPracticeSlideProps {
     isDark: boolean;
@@ -61,7 +62,7 @@ export const DailyPracticeSlide: React.FC<DailyPracticeSlideProps> = ({
                         letterSpacing={-1}
                         ta="center"
                     >
-                        Practice like{'\n'}the real exam.
+                        Remember better with spaced-repetition quizzes
                     </Text>
                     <Text
                         fontSize={18}
@@ -71,11 +72,16 @@ export const DailyPracticeSlide: React.FC<DailyPracticeSlideProps> = ({
                         lineHeight={26}
                         maxWidth={340}
                     >
-                        Subject-wise MCQs from GK, Maths, English, and more—just like PSC papers.
-                    </Text>
+കൃത്യമായ ഇടവേളകളിൽ ചോദ്യങ്ങൾ ആവർത്തിച്ച് ഉത്തരങ്ങൾ മനസ്സിൽ ഉറപ്പിക്കാം.                    </Text>
                 </YStack>
 
-                <YStack flex={1} />
+                <YStack flex={1} ai="center" jc="center">
+                    <Image
+                        source={require('../../../assets/images/onboarding/a-young-psc-aspirant-studying-with-confidence--sur (1).svg')}
+                        style={{ width: 280, height: 280 }}
+                        contentFit="contain"
+                    />
+                </YStack>
 
                 <Button
                     height={56}

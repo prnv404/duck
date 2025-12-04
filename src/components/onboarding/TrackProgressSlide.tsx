@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text, XStack, YStack } from 'tamagui';
+import { Image } from 'expo-image';
 
 interface TrackProgressSlideProps {
     isDark: boolean;
@@ -61,7 +62,7 @@ export const TrackProgressSlide: React.FC<TrackProgressSlideProps> = ({
                         letterSpacing={-1}
                         ta="center"
                     >
-                        Track your{'\n'}weak areas.
+                        Fix weak spots with targeted quiz drills
                     </Text>
                     <Text
                         fontSize={18}
@@ -71,11 +72,16 @@ export const TrackProgressSlide: React.FC<TrackProgressSlideProps> = ({
                         lineHeight={26}
                         maxWidth={340}
                     >
-                        See subject-wise accuracy and focus on topics that need improvement.
-                    </Text>
+തെറ്റായ ഉത്തരങ്ങൾ മാത്രം ഉൾപ്പെടുത്തി, ദുർബലമായ മേഖലകൾ മെച്ചപ്പെടുത്താൻ പ്രത്യേക പരിശീലനം നേടാം.                    </Text>
                 </YStack>
 
-                <YStack flex={1} />
+                <YStack flex={1} ai="center" jc="center">
+                    <Image
+                        source={require('../../../assets/images/onboarding/a-psc-student-looking-at-a-simple-results-board-wh.svg')}
+                        style={{ width: 280, height: 280 }}
+                        contentFit="contain"
+                    />
+                </YStack>
 
                 <Button
                     height={56}

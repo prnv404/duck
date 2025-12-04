@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text, XStack, YStack } from 'tamagui';
+import { Image } from 'expo-image';
 
 interface ProductIntroSlideProps {
     isDark: boolean;
@@ -47,7 +48,7 @@ export const ProductIntroSlide: React.FC<ProductIntroSlideProps> = ({
 
                 <YStack gap="$2" ai="center" mt={32}>
                     <Text
-                        fontSize={40}
+                        fontSize={30}
                         fontWeight="900"
                         color={accent}
                         fontFamily="$heading"
@@ -55,7 +56,7 @@ export const ProductIntroSlide: React.FC<ProductIntroSlideProps> = ({
                         letterSpacing={-1}
                         ta="center"
                     >
-                        Ace your{'\n'}PSC exam.
+                        Boring PSC prep made fun with quick quizzes
                     </Text>
                     <Text
                         fontSize={18}
@@ -65,11 +66,17 @@ export const ProductIntroSlide: React.FC<ProductIntroSlideProps> = ({
                         lineHeight={26}
                         maxWidth={340}
                     >
-                        Master Kerala PSC exams with smart practice, daily questions, and zero stress.
+                        വിരസമായ വിഷയങ്ങൾ വേഗത്തിലുള്ള ക്വിസുകളിലൂടെ രസകരമായി പഠിക്കാം.
                     </Text>
                 </YStack>
 
-                <YStack flex={1} />
+                <YStack flex={1} ai="center" jc="center">
+                    <Image
+                        source={require('../../../assets/images/onboarding/a-young-psc-aspirant-studying-with-confidence--sur.svg')}
+                        style={{ width: 280, height: 280 }}
+                        contentFit="contain"
+                    />
+                </YStack>
 
                 <Button
                     height={56}

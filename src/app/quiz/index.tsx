@@ -360,41 +360,47 @@ export default function QuizScreen() {
                 <YStack
                     p="$3.5"
                     pb="$5"
-                    bg={quiz.hasAnswered ? (quiz.isCorrect ? (isDark ? '#052e16' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2')) : 'transparent'}
+                    bg={quiz.hasAnswered ? (quiz.isCorrect ? (isDark ? '#14532d' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2')) : 'transparent'}
                 >
                     {quiz.hasAnswered && (
-                        <Animated.View entering={ZoomIn.duration(300)}>
+                        <>
                             {quiz.isCorrect ? (
                                 <YStack gap="$2.5" mb="$3">
                                     {/* Feedback Section */}
-                                    <FeedbackSection
-                                        questionFeedback={quiz.questionFeedback}
-                                        showFeedbackOptions={quiz.showFeedbackOptions}
-                                        feedbackReason={quiz.feedbackReason}
-                                        onFeedback={quiz.handleFeedback}
-                                        onFeedbackReason={quiz.handleFeedbackReason}
-                                        isDark={isDark}
-                                    />
+                                    <Animated.View entering={FadeInUp.duration(250).springify()}>
+                                        <FeedbackSection
+                                            questionFeedback={quiz.questionFeedback}
+                                            showFeedbackOptions={quiz.showFeedbackOptions}
+                                            feedbackReason={quiz.feedbackReason}
+                                            onFeedback={quiz.handleFeedback}
+                                            onFeedbackReason={quiz.handleFeedbackReason}
+                                            isDark={isDark}
+                                        />
+                                    </Animated.View>
 
                                     {/* Result Message */}
-                                    <ResultMessage
-                                        isCorrect={quiz.isCorrect}
-                                        correctAnswer={quiz.currentQuestion.correctAnswer}
-                                        explanation={quiz.currentQuestion.explanation}
-                                        isDark={isDark}
-                                    />
+                                    <Animated.View entering={FadeInUp.delay(100).duration(250).springify()}>
+                                        <ResultMessage
+                                            isCorrect={quiz.isCorrect}
+                                            correctAnswer={quiz.currentQuestion.correctAnswer}
+                                            explanation={quiz.currentQuestion.explanation}
+                                            isDark={isDark}
+                                        />
+                                    </Animated.View>
                                 </YStack>
                             ) : (
                                 <YStack gap="$2.5" mb="$3">
-                                    <ResultMessage
-                                        isCorrect={quiz.isCorrect}
-                                        correctAnswer={quiz.currentQuestion.correctAnswer}
-                                        explanation={quiz.currentQuestion.explanation}
-                                        isDark={isDark}
-                                    />
+                                    <Animated.View entering={FadeInUp.duration(250).springify()}>
+                                        <ResultMessage
+                                            isCorrect={quiz.isCorrect}
+                                            correctAnswer={quiz.currentQuestion.correctAnswer}
+                                            explanation={quiz.currentQuestion.explanation}
+                                            isDark={isDark}
+                                        />
+                                    </Animated.View>
                                 </YStack>
                             )}
-                        </Animated.View>
+                        </>
                     )}
 
                     <QuizFooter
@@ -451,20 +457,20 @@ interface ExitDialogProps {
 }
 
 const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, onCancel, onConfirm }) => {
-    const accent = '#ef4444';
-    const accentBg = isDark ? 'rgba(248,113,113,0.15)' : 'rgba(248,113,113,0.12)';
-    const subText = isDark ? '#94a3b8' : '#475569';
-    const bg = isDark ? '#020617' : '#ffffff';
+    const accent = isDark ? '#dc2626' : '#b91c1c';
+    const accentBg = isDark ? 'rgba(220,38,38,0.15)' : 'rgba(185,28,28,0.12)';
+    const subText = isDark ? '#a1a1aa' : '#64748b';
+    const bg = isDark ? '#151516ff' : '#f8fafc';
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
             <View style={styles.exitOverlay}>
                 <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} disabled={loading} />
 
-                <Animated.View entering={FadeInUp.springify()} exiting={FadeOutDown} style={{ width: '88%' }}>
+                <Animated.View entering={FadeInUp.springify()} exiting={FadeOutDown} style={{ width: '88%', maxWidth: 320 }}>
                     <YStack
                         bg={bg}
-                        borderRadius={28}
+                        borderRadius={24}
                         padding="$5"
                         gap="$4"
                         shadowColor="rgba(15,23,42,0.5)"
@@ -475,18 +481,18 @@ const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, o
                     >
                         <YStack ai="center" gap="$3">
                             <YStack
-                                width={72}
-                                height={72}
-                                borderRadius={20}
+                                width={64}
+                                height={64}
+                                borderRadius={18}
                                 backgroundColor={accentBg}
                                 alignItems="center"
                                 justifyContent="center"
                             >
-                                <MaterialCommunityIcons name="flag-outline" size={34} color={accent} />
+                                <MaterialCommunityIcons name="flag-outline" size={30} color={accent} />
                             </YStack>
 
                             <YStack gap="$2" w="100%" ai="center">
-                                <Text fontSize={24} fontFamily="Nunito_900Black" color={isDark ? '#f8fafc' : '#0f172a'}>
+                                <Text fontSize={20} fontFamily="Nunito_900Black" color={isDark ? '#eeebebff' : '#18181b'}>
                                     Leave this quiz?
                                 </Text>
                                 <Text
@@ -500,33 +506,35 @@ const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, o
                             </YStack>
                         </YStack>
 
-                        <XStack gap="$3" mt="$3">
+                        <XStack gap="$3">
                             <Button
                                 flex={1}
-                                height={50}
-                                borderRadius={18}
-                                borderWidth={1}
-                                borderColor={isDark ? '#1e293b' : '#e2e8f0'}
-                                backgroundColor={isDark ? '#0b1120' : '#ffffff'}
-                                color={isDark ? '#e2e8f0' : '#0f172a'}
+                                height={48}
+                                borderRadius={16}
+                                borderWidth={1.5}
+                                borderColor={isDark ? '#27272a' : '#e2e8f0'}
+                                backgroundColor={isDark ? '#18181b' : '#ffffff'}
+                                color={isDark ? '#e2e8f0' : '#18181b'}
                                 fontFamily="Nunito_800ExtraBold"
                                 onPress={onCancel}
                                 disabled={loading}
                                 opacity={loading ? 0.6 : 1}
+                                pressStyle={{ scale: 0.98, opacity: 0.9 }}
                             >
                                 Stay in quiz
                             </Button>
 
                             <Button
                                 flex={1}
-                                height={50}
-                                borderRadius={18}
+                                height={48}
+                                borderRadius={16}
                                 backgroundColor={accent}
-                                color="#fff8f1"
+                                color="#ffffff"
                                 fontFamily="Nunito_900Black"
                                 onPress={onConfirm}
                                 disabled={loading}
                                 opacity={loading ? 0.6 : 1}
+                                pressStyle={{ scale: 0.98, opacity: 0.9 }}
                             >
                                 {loading ? 'Wrapping up...' : 'Exit now'}
                             </Button>

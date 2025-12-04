@@ -33,14 +33,14 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
         <YStack
             p="$3.5"
             pb="$5"
-            bg={hasAnswered ? (isCorrect ? (isDark ? '#052e16' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2')) : 'transparent'}
+            bg={hasAnswered ? (isCorrect ? (isDark ? '#14532d' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2')) : 'transparent'}
         >
             <Animated.View style={{ width: '100%' }}>
                 <Button
                     size="$5"
                     bg={hasAnswered
-                        ? (isCorrect ? '#58cc02' : (isDark ? '#ef4444' : '#ff4b4b'))
-                        : (selectedOption ? '#58cc02' : (isDark ? '#374151' : '#e5e7eb'))
+                        ? (isCorrect ? (isDark ? '#50b174ff' : '#22c55e') : (isDark ? '#dc2626' : '#ef4444'))
+                        : (selectedOption ? (isDark ? '#16a34a' : '#39a05fff') : (isDark ? '#374151' : '#e5e7eb'))
                     }
                     disabled={isDisabled}
                     onPress={hasAnswered ? onContinue : onCheck}
@@ -48,8 +48,8 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
                     br={14}
                     borderBottomWidth={3}
                     borderColor={hasAnswered
-                        ? (isCorrect ? '#46a302' : (isDark ? '#b91c1c' : '#ea2b2b'))
-                        : (selectedOption ? '#46a302' : (isDark ? '#1f2937' : '#d1d5db'))
+                        ? (isCorrect ? (isDark ? '#15803d' : '#16a34a') : (isDark ? '#b91c1c' : '#dc2626'))
+                        : (selectedOption ? (isDark ? '#15803d' : '#16a34a') : (isDark ? '#1f2937' : '#d1d5db'))
                     }
                     h={52}
                     opacity={!selectedOption && !hasAnswered ? 0.6 : 1}

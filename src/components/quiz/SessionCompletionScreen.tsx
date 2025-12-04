@@ -192,8 +192,8 @@ export default function SessionCompletionScreen({
     const textColor = isDark ? '#fafafa' : '#09090b';
     const subtitleColor = isDark ? '#d4d4d8' : '#71717a';
     const scoreColor = isDark ? '#fafafa' : '#18181b';
-    const correctColor = isDark ? '#22c55e' : '#16a34a';
-    const wrongColor = isDark ? '#ef4444' : '#dc2626';
+    const correctColor = isDark ? '#16a34a' : '#22c55e';
+    const wrongColor = isDark ? '#dc2626' : '#ef4444';
     const timeColor = isDark ? '#60a5fa' : '#3b82f6';
 
     return (

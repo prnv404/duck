@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text, XStack, YStack } from 'tamagui';
+import { Image } from 'expo-image';
 
 interface GamifiedLearningSlideProps {
     isDark: boolean;
@@ -61,7 +62,7 @@ export const GamifiedLearningSlide: React.FC<GamifiedLearningSlideProps> = ({
                         letterSpacing={-1}
                         ta="center"
                     >
-                        Stay consistent{'\n'}with streaks.
+                        Gamified quizzes that build a daily habit
                     </Text>
                     <Text
                         fontSize={18}
@@ -71,11 +72,16 @@ export const GamifiedLearningSlide: React.FC<GamifiedLearningSlideProps> = ({
                         lineHeight={26}
                         maxWidth={340}
                     >
-                        Build daily habits, earn XP, and level up your PSC preparation.
-                    </Text>
+റിവാർഡുകളും ലെവലുകളും ഉപയോഗിച്ച് ദൈനംദിന പഠനം ഒരു ശീലമാക്കി മാറ്റുന്നു.                    </Text>
                 </YStack>
 
-                <YStack flex={1} />
+                <YStack flex={1} ai="center" jc="center">
+                    <Image
+                        source={require('../../../assets/images/onboarding/a-psc-candidate-with-a-glowing-brain-head--and-flo.svg')}
+                        style={{ width: 280, height: 280 }}
+                        contentFit="contain"
+                    />
+                </YStack>
 
                 <Button
                     height={56}

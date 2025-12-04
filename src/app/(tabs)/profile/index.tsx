@@ -281,10 +281,10 @@ interface LogoutDialogProps {
 }
 
 const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, onCancel, onConfirm }) => {
-  const accent = '#ef4444';
-  const accentBg = isDark ? 'rgba(248,113,113,0.18)' : 'rgba(248,113,113,0.14)';
-  const bg = isDark ? '#020617' : '#ffffff';
-  const subText = isDark ? '#94a3b8' : '#475569';
+  const accent = isDark ? '#dc2626' : '#b91c1c';
+  const accentBg = isDark ? 'rgba(220,38,38,0.15)' : 'rgba(185,28,28,0.12)';
+  const bg = isDark ? '#151516ff' : '#f8fafc';
+  const subText = isDark ? '#a1a1aa' : '#64748b';
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -295,7 +295,7 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, o
           <YStack
             width={320}
             bg={bg}
-            borderRadius={28}
+            borderRadius={24}
             padding="$5"
             gap="$4"
             shadowColor="rgba(15,23,42,0.4)"
@@ -306,18 +306,18 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, o
           >
             <YStack ai="center" gap="$3">
               <YStack
-                width={68}
-                height={68}
-                borderRadius={20}
+                width={64}
+                height={64}
+                borderRadius={18}
                 backgroundColor={accentBg}
                 alignItems="center"
                 justifyContent="center"
               >
-                <MaterialCommunityIcons name="logout-variant" size={30} color={accent} />
+                <MaterialCommunityIcons name="logout-variant" size={28} color={accent} />
               </YStack>
 
               <YStack gap="$2" ai="center">
-                <Text fontSize={22} fontFamily="Nunito_900Black" color={isDark ? '#f8fafc' : '#0f172a'}>
+                <Text fontSize={20} fontFamily="Nunito_900Black" color={isDark ? '#eeebebff' : '#18181b'}>
                   Sign out of Duck?
                 </Text>
                 <Text fontSize={15} fontFamily="Nunito_600SemiBold" color={subText} textAlign="center">
@@ -330,15 +330,16 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, o
               <Button
                 flex={1}
                 height={48}
-                borderRadius={18}
-                borderWidth={1}
-                borderColor={isDark ? '#1e293b' : '#e2e8f0'}
-                backgroundColor={isDark ? '#0b1120' : '#ffffff'}
-                color={isDark ? '#e2e8f0' : '#0f172a'}
+                borderRadius={16}
+                borderWidth={1.5}
+                borderColor={isDark ? '#27272a' : '#e2e8f0'}
+                backgroundColor={isDark ? '#18181b' : '#ffffff'}
+                color={isDark ? '#e2e8f0' : '#18181b'}
                 fontFamily="Nunito_800ExtraBold"
                 onPress={onCancel}
                 disabled={loading}
                 opacity={loading ? 0.6 : 1}
+                pressStyle={{ scale: 0.98, opacity: 0.9 }}
               >
                 Stay logged in
               </Button>
@@ -346,13 +347,14 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, o
               <Button
                 flex={1}
                 height={48}
-                borderRadius={18}
+                borderRadius={16}
                 backgroundColor={accent}
-                color="#f8feff"
+                color="#ffffff"
                 fontFamily="Nunito_900Black"
                 onPress={onConfirm}
                 disabled={loading}
                 opacity={loading ? 0.6 : 1}
+                pressStyle={{ scale: 0.98, opacity: 0.9 }}
               >
                 {loading ? 'Signing out...' : 'Logout'}
               </Button>

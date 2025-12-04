@@ -8,6 +8,17 @@ import { Circle, Text, XStack, YStack } from 'tamagui'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
+/**
+ * Formats a Date object to 'YYYY-MM-DD' string using local timezone.
+ * This avoids the timezone shift issue that occurs with toISOString().
+ */
+const formatLocalDate = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 type StreakData = {
   [date: string]: number // date format: 'YYYY-MM-DD', value: number of activities (0-5+)
 }
@@ -48,7 +59,7 @@ export default function StreakCalendar({
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = formatLocalDate(date)
       days.push({
         date: dateStr,
         day: date.getDate(),
@@ -77,7 +88,7 @@ export default function StreakCalendar({
     // Fill days of month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = formatLocalDate(date)
 
       currentWeek.push({
         date: dateStr,
@@ -142,7 +153,7 @@ export default function StreakCalendar({
         >
           <XStack ai="center" jc="space-between" mb="$3">
             <YStack>
-              <Text fontSize={16} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0f172a'}>❤️‍🔥 Maintain streak bro</Text>
+              <Text fontSize={16} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0f172a'}>Please maintain daily streak</Text>
             </YStack>
             <YStack ai="flex-end">
               <XStack ai="center" gap="$1">

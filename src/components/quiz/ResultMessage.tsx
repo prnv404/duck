@@ -19,6 +19,34 @@ export const ResultMessage: React.FC<ResultMessageProps> = ({
 
     return (
         <YStack gap="$2.5">
+            <XStack ai="center" gap="$2.5">
+                <Circle size={28} bg={isCorrect ? (isDark ? '#16a34a' : '#22c55e') : (isDark ? '#dc2626' : '#ef4444')}>
+                    <MaterialCommunityIcons
+                        name={isCorrect ? 'check' : 'close'}
+                        size={16}
+                        color="#fff"
+                    />
+                </Circle>
+                <YStack f={1}>
+                    <Text
+                        fontSize={20}
+                        fontFamily="Nunito_900Black"
+                        color={isCorrect ? (isDark ? '#16a34a' : '#22c55e') : (isDark ? '#dc2626' : '#ef4444')}
+                    >
+                        {isCorrect ? 'Nice work!' : 'Incorrect'}
+                    </Text>
+                    {!isCorrect && (
+                        <Text
+                            fontSize={13}
+                            fontFamily="Nunito_700Bold"
+                            color={isDark ? '#f87171' : '#b91c1c'}
+                        >
+                            Correct: {correctAnswer}
+                        </Text>
+                    )}
+                </YStack>
+            </XStack>
+
             <YStack
                 p="$3"
                 bg={isDark ? '#111827' : '#ecfdf5'}
@@ -40,37 +68,9 @@ export const ResultMessage: React.FC<ResultMessageProps> = ({
                 >
                     {hasExplanation
                         ? explanation
-                        : `The correct option is "${correctAnswer}". We’ll add a detailed breakdown for this question soon.`}
+                        : `The correct option is "${correctAnswer}". We'll add a detailed breakdown for this question soon.`}
                 </Text>
             </YStack>
-
-            <XStack ai="center" gap="$2.5">
-                <Circle size={28} bg={isCorrect ? '#22c55e' : '#ef4444'}>
-                    <MaterialCommunityIcons
-                        name={isCorrect ? 'check' : 'close'}
-                        size={16}
-                        color="#fff"
-                    />
-                </Circle>
-                <YStack f={1}>
-                    <Text
-                        fontSize={20}
-                        fontFamily="Nunito_900Black"
-                        color={isCorrect ? '#22c55e' : '#ef4444'}
-                    >
-                        {isCorrect ? 'Nice work!' : 'Incorrect'}
-                    </Text>
-                    {!isCorrect && (
-                        <Text
-                            fontSize={13}
-                            fontFamily="Nunito_700Bold"
-                            color={isDark ? '#fca5a5' : '#b91c1c'}
-                        >
-                            Correct: {correctAnswer}
-                        </Text>
-                    )}
-                </YStack>
-            </XStack>
         </YStack>
     );
 };

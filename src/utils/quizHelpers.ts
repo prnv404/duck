@@ -23,11 +23,11 @@ export const getOptionColor = (
     }
 
     if (option === correctAnswer) {
-        return isDark ? '#22c55e' : '#4ade80';
+        return isDark ? '#16a34a' : '#22c55e';
     }
 
     if (selectedOption === option && option !== correctAnswer) {
-        return isDark ? '#ef4444' : '#f87171';
+        return isDark ? '#dc2626' : '#ef4444';
     }
 
     return isDark ? '#1f2937' : '#ffffff';

@@ -1,16 +1,15 @@
-import { Audio } from 'expo-av';
+import { createAudioPlayer, AudioSource } from 'expo-audio';
 
 // Audio sources
-const correctSoundFile = require('../../assets/audio/correct.mp3');
-const incorrectSoundFile = require('../../assets/audio/incorrect.mp3');
+const correctSoundFile = require('../../assets/audio/correct.mp3') as AudioSource;
+const incorrectSoundFile = require('../../assets/audio/incorrect.mp3') as AudioSource;
 
-// Global audio singleton service using expo-av
+// Global audio singleton service using expo-audio
 class AudioFeedbackService {
     private static instance: AudioFeedbackService;
-    private isConfigured = false;
     private isLoaded = false;
-    private correctSound: Audio.Sound | null = null;
-    private incorrectSound: Audio.Sound | null = null;
+    private correctPlayer: ReturnType<typeof createAudioPlayer> | null = null;
+    private incorrectPlayer: ReturnType<typeof createAudioPlayer> | null = null;
 
     private constructor() {
         // Private constructor to prevent direct instantiation
@@ -23,34 +22,13 @@ class AudioFeedbackService {
         return AudioFeedbackService.instance;
     }
 
-    async configure() {
-        if (this.isConfigured) return;
-
-        try {
-            await Audio.setAudioModeAsync({
-                playsInSilentModeIOS: true,
-                allowsRecordingIOS: false,
-                staysActiveInBackground: false,
-            });
-            this.isConfigured = true;
-        } catch (error) {
-            console.error('Error setting up audio mode:', error);
-        }
-    }
-
     async load() {
         if (this.isLoaded) return;
 
         try {
-            // Configure audio mode first
-            await this.configure();
-
-            // Load sounds
-            const { sound: correctSound } = await Audio.Sound.createAsync(correctSoundFile);
-            const { sound: incorrectSound } = await Audio.Sound.createAsync(incorrectSoundFile);
-
-            this.correctSound = correctSound;
-            this.incorrectSound = incorrectSound;
+            // Create audio players for both sounds
+            this.correctPlayer = createAudioPlayer(correctSoundFile);
+            this.incorrectPlayer = createAudioPlayer(incorrectSoundFile);
 
             this.isLoaded = true;
         } catch (error) {
@@ -59,14 +37,15 @@ class AudioFeedbackService {
     }
 
     async playCorrect() {
-        if (!this.correctSound) {
+        if (!this.correctPlayer) {
             await this.load();
         }
 
         try {
-            if (this.correctSound) {
-                await this.correctSound.setPositionAsync(0);
-                await this.correctSound.playAsync();
+            if (this.correctPlayer) {
+                // Seek to start and play
+                this.correctPlayer.seekTo(0);
+                this.correctPlayer.play();
             }
         } catch (error) {
             console.warn('Could not play correct sound:', error);
@@ -74,14 +53,15 @@ class AudioFeedbackService {
     }
 
     async playIncorrect() {
-        if (!this.incorrectSound) {
+        if (!this.incorrectPlayer) {
             await this.load();
         }
 
         try {
-            if (this.incorrectSound) {
-                await this.incorrectSound.setPositionAsync(0);
-                await this.incorrectSound.playAsync();
+            if (this.incorrectPlayer) {
+                // Seek to start and play
+                this.incorrectPlayer.seekTo(0);
+                this.incorrectPlayer.play();
             }
         } catch (error) {
             console.warn('Could not play incorrect sound:', error);
@@ -99,13 +79,13 @@ class AudioFeedbackService {
     // Cleanup method if needed
     async unload() {
         try {
-            if (this.correctSound) {
-                await this.correctSound.unloadAsync();
-                this.correctSound = null;
+            if (this.correctPlayer) {
+                this.correctPlayer.remove();
+                this.correctPlayer = null;
             }
-            if (this.incorrectSound) {
-                await this.incorrectSound.unloadAsync();
-                this.incorrectSound = null;
+            if (this.incorrectPlayer) {
+                this.incorrectPlayer.remove();
+                this.incorrectPlayer = null;
             }
             this.isLoaded = false;
         } catch (error) {
