@@ -1,7 +1,7 @@
 import { authClient } from '@/lib/auth';
 
 // Base URL for the REST API
-const API_BASE_URL = 'https://delia-unsigneted-marcela.ngrok-free.dev';
+const API_BASE_URL = 'https://duck-server-production.up.railway.app';
 
 /**
  * API Client for making authenticated requests

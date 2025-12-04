@@ -10,7 +10,6 @@ import { DailyPracticeSlide } from '@/components/onboarding/DailyPracticeSlide';
 import { TrackProgressSlide } from '@/components/onboarding/TrackProgressSlide';
 import { GamifiedLearningSlide } from '@/components/onboarding/GamifiedLearningSlide';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useAnalytics } from '@/hooks/useAnalytics';
 
 
 // Removed 'startJourney' - no longer need name input
@@ -20,34 +19,16 @@ type SlideKey = (typeof SLIDES)[number];
 export default function OnboardingScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
-    const { trackEvent, trackScreen, setUserProperties } = useAnalytics();
     const [currentScreen, setCurrentScreen] = useState<SlideKey>('welcome');
-    const [onboardingStartTime] = useState(Date.now());
     const totalSteps = SLIDES.length;
 
     const currentIndex = useMemo(() => SLIDES.indexOf(currentScreen), [currentScreen]);
-
-    // Track screen changes
-    React.useEffect(() => {
-        trackScreen(`Onboarding - ${currentScreen}`, {
-            step: currentIndex + 1,
-            totalSteps,
-            screenName: currentScreen,
-        });
-    }, [currentScreen]);
 
     const goToIndex = useCallback(
         (index: number) => {
             const target = SLIDES[Math.min(Math.max(index, 0), totalSteps - 1)];
             if (target !== currentScreen) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-                trackEvent('onboarding_navigation', {
-                    from: currentScreen,
-                    to: target,
-                    fromStep: currentIndex + 1,
-                    toStep: SLIDES.indexOf(target) + 1,
-                });
 
                 setCurrentScreen(target);
             }
@@ -64,38 +45,16 @@ export default function OnboardingScreen() {
     }, [currentIndex, goToIndex]);
 
     const handleSkip = useCallback(() => {
-        trackEvent('onboarding_skipped', {
-            fromStep: currentIndex + 1,
-            fromScreen: currentScreen,
-        });
         handleComplete();
     }, [currentIndex, currentScreen]);
 
     const handleComplete = async () => {
-        const timeSpent = Math.floor((Date.now() - onboardingStartTime) / 1000); // seconds
-
         try {
-            // Set user properties
-            setUserProperties({
-                onboardingCompleted: true,
-                onboardingCompletedAt: new Date().toISOString(),
-            });
-
-            // Track completion
-            trackEvent('onboarding_completed', {
-                timeSpent,
-                totalSteps,
-            });
-
             await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             await AsyncStorage.setItem('@onboarding_completed', 'true');
             router.replace('/(tabs)');
         } catch (error) {
             console.error('Error saving onboarding data:', error);
-
-            trackEvent('onboarding_completion_failed', {
-                error: error instanceof Error ? error.message : 'Unknown error',
-            });
         }
     };
 

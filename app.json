@@ -1,35 +1,42 @@
 {
   "expo": {
-    "name": "duck",
+    "name": "Duck",
     "slug": "duck",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/android/icons/android-icon-512.png",
     "scheme": "duck",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/ios/icons/ios-icon-1024.png",
+      "splash": {
+        "image": "./assets/ios/splash/ios-splash-2732x2732.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#000000"
+      }
     },
-"android": {
- "adaptiveIcon": {
-  "foregroundImage": "./assets/images/Untitledesign.png",
-  "backgroundColor": "#FFFFFF"
-},
-    "splash": {
-      "backgroundColor": "#FFFFFF",
-      "resizeMode": "contain"
-    }
-  },
-  "androidStatusBar": {
-    "backgroundColor": "#E6F4FE",
-    "barStyle": "dark-content"
-  },
-  "edgeToEdgeEnabled": true,
-  "predictiveBackGestureEnabled": false,
-  "package": "com.ducklearning.duck",
-  "versionCode": 1
-},
+    "android": {
+      "icon": "./assets/android/icons/android-icon-512.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android/icons/android-icon-512.png",
+        "backgroundColor": "#000000"
+      },
+      "splash": {
+        "image": "./assets/android/splash/android-splash-1920x1920.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#000000"
+      },
+      "androidStatusBar": {
+        "backgroundColor": "#000000",
+        "barStyle": "light-content"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ducklearning.duck",
+      "versionCode": 1
+    },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -39,14 +46,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/android/splash/android-splash-1920x1920.png",
           "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "image": "./assets/images/splash-icon.png",
-            "backgroundColor": "#000000"
-          }
+          "resizeMode": "native",
+          "backgroundColor": "#000000"
         }
       ],
       "expo-audio",
@@ -67,3 +70,4 @@
       "**/*"
     ]
   }
+}

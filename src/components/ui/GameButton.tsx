@@ -25,12 +25,12 @@ function GameButton({ children, bg = '$green9', tone = 'solid', textColor, glow 
       style={[
         glow
           ? {
-              shadowColor: typeof bg === 'string' ? '#22c55e' : '#22c55e',
-              shadowOpacity: 0.45,
-              shadowRadius: 18,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 10,
-            }
+            shadowColor: typeof bg === 'string' ? '#10b981' : '#10b981',
+            shadowOpacity: 0.3,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
+          }
           : null,
       ]}
       {...rest}

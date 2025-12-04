@@ -20,10 +20,10 @@ import { Text, XStack, YStack, View } from 'tamagui';
 // --------------------------------------------------------------------------------
 
 const MODES = [
-    { type: 'adaptive', icon: 'brain', label: 'Adaptive',color: '#80c37dff'  },
-    { type: 'balanced', icon: 'scale-balance', label: 'Balanced', color: '#8B5CF6' },
-    { type: 'weak_area', icon: 'target', label: 'Weak Spots', color: '#F59E0B' },
-    { type: 'hard_core', icon: 'fire', label: 'Hardcore', color: '#EF4444' },
+    { type: 'adaptive', icon: 'brain', label: 'Adaptive', color: '#119441ff' },
+    { type: 'balanced', icon: 'scale-balance', label: 'Balanced', color: '#7c3aed' },
+    { type: 'weak_area', icon: 'target', label: 'Weak Spots', color: '#d97706' },
+    { type: 'hard_core', icon: 'fire', label: 'Hardcore', color: '#dc2626' },
 ] as const;
 
 type QuizModeType = typeof MODES[number]['type'];
@@ -32,24 +32,24 @@ type QuizModeType = typeof MODES[number]['type'];
 // --- Main Component ---
 // --------------------------------------------------------------------------------
 
-export default function SolidModeSelector({ 
-    selectedMode, 
-    onModeSelect, 
-    onStartQuiz, 
+export default function SolidModeSelector({
+    selectedMode,
+    onModeSelect,
+    onStartQuiz,
     isDark,
     onShowModeExplanation,
-}: { 
-    selectedMode: QuizModeType; 
-    onModeSelect: (m: QuizModeType) => void; 
+}: {
+    selectedMode: QuizModeType;
+    onModeSelect: (m: QuizModeType) => void;
     onStartQuiz: () => void;
     isDark: boolean;
     onShowModeExplanation?: (mode: QuizModeType) => void;
 }) {
     // Theme Constants
-    const bg = isDark ? '#18181B' : '#FFFFFF';
-    const border = isDark ? '#27272A' : '#E4E4E7';
-    const text = isDark ? '#FFFFFF' : '#09090B';
-    const textSecondary = isDark ? '#A1A1AA' : '#6B7280';
+    const bg = isDark ? '#131416ff' : '#ffffff';
+    const border = isDark ? '#040404ff' : '#e2e8f0';
+    const text = isDark ? '#e2e8f0' : '#1e293b';
+    const textSecondary = isDark ? '#cfd6e7ff' : '#64748b';
     const currentModeDetails = MODES.find(m => m.type === selectedMode) || MODES[0];
     const activeColor = currentModeDetails.color;
 
@@ -63,7 +63,7 @@ export default function SolidModeSelector({
             {/* --- Context Header --- */}
             <YStack mb="$4" ai="center">
                 <Text fontSize={20} fontFamily="Nunito_800ExtraBold" color={text} textAlign="center">
-                     Practice Questions
+                    Practice Questions
                 </Text>
                 <Text fontSize={14} fontFamily="Nunito_600SemiBold" color={textSecondary} textAlign="center">
                     Build knowledge brick by brick 🧱
@@ -71,21 +71,21 @@ export default function SolidModeSelector({
             </YStack>
 
             {/* --- Solid Control Deck Card --- */}
-            <YStack 
-                bg={bg} 
-                br={16} 
-                borderWidth={1} 
-                borderColor={border} 
-                p="$3.5" 
+            <YStack
+                bg={bg}
+                br={16}
+                borderWidth={1}
+                borderColor={border}
+                p="$3.5"
                 width="100%"
-                maxWidth={400} 
+                maxWidth={400}
                 alignSelf="center"
-                gap="$3.5" 
+                gap="$3.5"
                 style={{
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: isDark ? 0.3 : 0.05,
-                    shadowRadius: 3,
+                    shadowOpacity: isDark ? 0.2 : 0.03,
+                    shadowRadius: 4,
                     elevation: 2,
                 }}
             >
@@ -103,9 +103,9 @@ export default function SolidModeSelector({
                     </Text>
                     <XStack gap="$2" f={1}>
                         {MODES.map((mode) => (
-                            <ModeOption 
+                            <ModeOption
                                 key={mode.type}
-                                mode={mode} 
+                                mode={mode}
                                 isActive={selectedMode === mode.type}
                                 onPress={() => handleSelectMode(mode.type)}
                                 isDark={isDark}
@@ -115,9 +115,9 @@ export default function SolidModeSelector({
                 </YStack>
 
                 {/* --- 3. Call to Action (Bottom Section) --- */}
-                <StartButton 
-                    onPress={() => onShowModeExplanation?.(selectedMode) || onStartQuiz()} 
-                    color={activeColor} 
+                <StartButton
+                    onPress={() => onShowModeExplanation?.(selectedMode) || onStartQuiz()}
+                    color={activeColor}
                     label={`Start ${currentModeDetails.label}`}
                 />
             </YStack>
@@ -148,14 +148,14 @@ function StartButton({ onPress, color, label }: { onPress: () => void, color: st
     return (
         <Animated.View style={[{ height: 52 }, animatedStyle]}>
             <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} style={{ flex: 1 }}>
-                <XStack 
-                    f={1} 
-                    bg={color} 
-                    br={12} 
-                    ai="center" 
-                    jc="center" 
+                <XStack
+                    f={1}
+                    bg={color}
+                    br={12}
+                    ai="center"
+                    jc="center"
                     gap="$2"
-                    style={{ shadowColor: color, shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.3, shadowRadius: 4 }}
+                    style={{ shadowColor: color, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 }}
                 >
                     <Text fontFamily="Nunito_800ExtraBold" fontSize={18} color="white" textTransform='uppercase'>
                         {label}
@@ -170,26 +170,26 @@ function StartButton({ onPress, color, label }: { onPress: () => void, color: st
 function ModeOption({ mode, isActive, onPress, isDark }: { mode: typeof MODES[number], isActive: boolean, onPress: () => void, isDark: boolean }) {
     return (
         <Pressable onPress={onPress} style={{ flex: 1 }}>
-            <YStack 
-                f={1} 
+            <YStack
+                f={1}
                 h={60}
-                bg={isActive ? mode.color : (isDark ? '#27272A' : '#F4F4F5')} 
-                br={10} 
-                ai="center" 
-                jc="center" 
+                bg={isActive ? mode.color : (isDark ? '#000000' : '#f1f5f9')}
+                br={10}
+                ai="center"
+                jc="center"
                 gap="$1"
                 borderWidth={isActive ? 0 : 1}
-                borderColor={isDark ? '#3F3F46' : '#E4E4E7'}
+                borderColor={isDark ? '#1a1a1a' : '#cbd5e1'}
             >
-                <MaterialCommunityIcons 
-                    name={mode.icon as any} 
-                    size={22} 
-                    color={isActive ? 'white' : mode.color} 
+                <MaterialCommunityIcons
+                    name={mode.icon as any}
+                    size={22}
+                    color={isActive ? 'white' : mode.color}
                 />
-                 <Text 
-                    fontSize={11} 
-                    fontFamily="Nunito_700Bold" 
-                    color={isActive ? 'white' : (isDark ? '#A1A1AA' : '#52525B')} 
+                <Text
+                    fontSize={11}
+                    fontFamily="Nunito_700Bold"
+                    color={isActive ? 'white' : (isDark ? '#94a3b8' : '#475569')}
                     textAlign='center'
                 >
                     {mode.label}

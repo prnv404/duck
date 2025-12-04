@@ -33,14 +33,14 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
         <YStack
             p="$3.5"
             pb="$5"
-            bg={hasAnswered ? (isCorrect ? (isDark ? '#14532d' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2')) : 'transparent'}
+            bg={hasAnswered ? (isCorrect ? (isDark ? '#1e3a32' : '#dcfce7') : (isDark ? '#3a1e1e' : '#fee2e2')) : 'transparent'}
         >
             <Animated.View style={{ width: '100%' }}>
                 <Button
                     size="$5"
                     bg={hasAnswered
-                        ? (isCorrect ? (isDark ? '#50b174ff' : '#22c55e') : (isDark ? '#dc2626' : '#ef4444'))
-                        : (selectedOption ? (isDark ? '#16a34a' : '#39a05fff') : (isDark ? '#374151' : '#e5e7eb'))
+                        ? (isCorrect ? '#10b981' : '#ef4444')
+                        : (selectedOption ? '#10b981' : (isDark ? '#475569' : '#cbd5e1'))
                     }
                     disabled={isDisabled}
                     onPress={hasAnswered ? onContinue : onCheck}
@@ -48,8 +48,8 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
                     br={14}
                     borderBottomWidth={3}
                     borderColor={hasAnswered
-                        ? (isCorrect ? (isDark ? '#15803d' : '#16a34a') : (isDark ? '#b91c1c' : '#dc2626'))
-                        : (selectedOption ? (isDark ? '#15803d' : '#16a34a') : (isDark ? '#1f2937' : '#d1d5db'))
+                        ? (isCorrect ? '#059669' : '#dc2626')
+                        : (selectedOption ? '#059669' : (isDark ? '#334155' : '#94a3b8'))
                     }
                     h={52}
                     opacity={!selectedOption && !hasAnswered ? 0.6 : 1}
@@ -84,7 +84,7 @@ export const QuizFooter: React.FC<QuizFooterProps> = ({
                         <Text
                             fontSize={18}
                             fontFamily="Nunito_800ExtraBold"
-                            color={!selectedOption && !hasAnswered ? (isDark ? '#6b7280' : '#9ca3af') : '#ffffff'}
+                            color={!selectedOption && !hasAnswered ? (isDark ? '#64748b' : '#94a3b8') : '#ffffff'}
                             textTransform="uppercase"
                             letterSpacing={0.5}
                         >

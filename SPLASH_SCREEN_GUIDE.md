@@ -2,10 +2,11 @@
 
 ## Design Philosophy
 The splash screen follows our app's design philosophy:
-- **Primary Colors**: Emerald Green (#10b981) and Violet (#8B5CF6)
-- **Background**: Light Blue (#E6F4FE) for light mode, Dark (#0a0a0a) for dark mode
-- **Typography**: Nunito font family (Bold/ExtraBold)
-- **Style**: Clean, modern, educational, and friendly
+- **Primary Colors**: Emerald Green (#10b981) and softer accent colors
+- **Background**: Black (#000000) for both light and dark mode
+- **Typography**: Nunito font family (Bold/ExtraBold) in white
+- **Text Position**: "Duck" text positioned at the bottom of the screen
+- **Style**: Clean, modern, minimal, and eye-friendly
 
 ## Current Configuration
 
@@ -15,16 +16,18 @@ The splash screen is configured in `app.json`:
 ```json
 "android": {
   "splash": {
-    "image": "./assets/images/splash-icon.png",
+    "image": "./assets/android/splash/android-splash-1920x1920.png",
     "resizeMode": "contain",
-    "backgroundColor": "#E6F4FE",
-    "dark": {
-      "image": "./assets/images/splash-icon.png",
-      "backgroundColor": "#0a0a0a"
-    }
+    "backgroundColor": "#000000"
   }
 }
 ```
+
+**Important Notes:**
+- Background is now black (#000000) for a cleaner, less overwhelming look
+- The "Duck" text should be white and positioned at the bottom
+- Image width reduced to 200px to prevent text covering issues
+- ResizeMode set to "native" for better control
 
 ## Creating Custom Splash Screen Assets
 
@@ -44,15 +47,16 @@ The splash screen is configured in `app.json`:
    - Keep it simple and recognizable
 
 2. **Color Scheme**:
-   - Light mode background: #E6F4FE (soft blue)
-   - Dark mode background: #0a0a0a (near black)
+   - Background: #000000 (pure black) for both modes
+   - Text color: #FFFFFF (white)
    - Primary accent: #10b981 (emerald green)
-   - Secondary accent: #8B5CF6 (violet)
+   - Text position: Bottom of screen
 
-3. **Typography** (if adding text):
+3. **Typography**:
    - Font: Nunito ExtraBold or Black
-   - App name: "Duck Learning" or just "Duck"
-   - Tagline (optional): "Learn Smarter, Not Harder"
+   - App name: "Duck" in white (#FFFFFF)
+   - Position: Bottom of the screen (not center)
+   - Size: Large and bold for visibility
 
 ## Generating Splash Screen Assets
 

@@ -19,18 +19,18 @@ export const getOptionColor = (
     if (!hasAnswered) {
         return selectedOption === option
             ? (isDark ? '#3b82f6' : '#2563eb')
-            : (isDark ? '#1f2937' : '#ffffff');
+            : (isDark ? '#1e293b' : '#ffffff');
     }
 
     if (option === correctAnswer) {
-        return isDark ? '#16a34a' : '#22c55e';
+        return isDark ? '#22c55e' : '#22c55e';
     }
 
     if (selectedOption === option && option !== correctAnswer) {
-        return isDark ? '#dc2626' : '#ef4444';
+        return isDark ? '#ef4444' : '#ef4444';
     }
 
-    return isDark ? '#1f2937' : '#ffffff';
+    return isDark ? '#0d0e0eff' : '#ffffff';
 };
 
 /**
@@ -43,13 +43,13 @@ export const getOptionBorderColor = (
     if (!hasAnswered) {
         return selectedOption === option
             ? (isDark ? '#60a5fa' : '#3b82f6')
-            : (isDark ? '#e5e7eb' : '#e5e7eb');
+            : (isDark ? '#b5becaff' : '#e5e7eb');
     }
 
     if (option === correctAnswer) return 'transparent';
     if (selectedOption === option) return 'transparent';
 
-    return isDark ? '#374151' : '#e5e7eb';
+    return isDark ? '#cbced4ff' : '#e5e7eb';
 };
 
 /**

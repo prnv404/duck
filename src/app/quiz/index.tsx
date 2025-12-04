@@ -199,23 +199,23 @@ export default function QuizScreen() {
                         <YStack
                             w={140}
                             h={140}
-                            bg={isDark ? '#116e0cff' : '#e0f2fe'}
+                            bg={isDark ? '#064e3b' : '#d1fae5'}
                             br={70}
                             ai="center"
                             jc="center"
                             style={{
-                                shadowColor: '#0ee932ff',
-                                shadowOpacity: 0.4,
-                                shadowRadius: 20,
-                                elevation: 10,
+                                shadowColor: '#10b981',
+                                shadowOpacity: 0.3,
+                                shadowRadius: 16,
+                                elevation: 8,
                                 borderWidth: 4,
-                                borderColor: '#0ee932ff'
+                                borderColor: '#10b981'
                             }}
                         >
                             <MaterialCommunityIcons
                                 name="check-decagram"
                                 size={72}
-                                color="#0ee932ff"
+                                color="#10b981"
                             />
                         </YStack>
                     </Animated.View>
@@ -262,7 +262,7 @@ export default function QuizScreen() {
                     <Animated.View entering={FadeInUp.delay(500).springify()} style={{ width: '100%', maxWidth: 280 }}>
                         <Button
                             size="$5"
-                            bg="#0ea5e9"
+                            bg="#0891b2"
                             color="white"
                             fontFamily="Nunito_800ExtraBold"
                             pressStyle={{ scale: 0.96, opacity: 0.9 }}
@@ -270,7 +270,7 @@ export default function QuizScreen() {
                             br={16}
                             h={56}
                             borderBottomWidth={4}
-                            borderColor="#0284c7"
+                            borderColor="#0e7490"
                             icon={<MaterialCommunityIcons name="home-variant" size={24} color="white" />}
                         >
                             Back to Home
@@ -360,7 +360,7 @@ export default function QuizScreen() {
                 <YStack
                     p="$3.5"
                     pb="$5"
-                    bg={quiz.hasAnswered ? (quiz.isCorrect ? (isDark ? '#14532d' : '#dcfce7') : (isDark ? '#450a0a' : '#fee2e2')) : 'transparent'}
+                    bg={quiz.hasAnswered ? (quiz.isCorrect ? (isDark ? '#1e3a32' : '#d1fae5') : (isDark ? '#3a1e1e' : '#fee2e2')) : 'transparent'}
                 >
                     {quiz.hasAnswered && (
                         <>
@@ -457,10 +457,10 @@ interface ExitDialogProps {
 }
 
 const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, onCancel, onConfirm }) => {
-    const accent = isDark ? '#dc2626' : '#b91c1c';
-    const accentBg = isDark ? 'rgba(220,38,38,0.15)' : 'rgba(185,28,28,0.12)';
-    const subText = isDark ? '#a1a1aa' : '#64748b';
-    const bg = isDark ? '#151516ff' : '#f8fafc';
+    const accent = '#ef4444';
+    const accentBg = isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.12)';
+    const subText = isDark ? '#999999' : '#666666';
+    const bg = isDark ? '#000000' : '#ffffff';
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -492,7 +492,7 @@ const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, o
                             </YStack>
 
                             <YStack gap="$2" w="100%" ai="center">
-                                <Text fontSize={20} fontFamily="Nunito_900Black" color={isDark ? '#eeebebff' : '#18181b'}>
+                                <Text fontSize={20} fontFamily="Nunito_900Black" color={isDark ? '#ffffff' : '#000000'}>
                                     Leave this quiz?
                                 </Text>
                                 <Text
@@ -510,24 +510,22 @@ const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, o
                             <Button
                                 flex={1}
                                 height={48}
-                                borderRadius={16}
-                                borderWidth={1.5}
-                                borderColor={isDark ? '#27272a' : '#e2e8f0'}
-                                backgroundColor={isDark ? '#18181b' : '#ffffff'}
-                                color={isDark ? '#e2e8f0' : '#18181b'}
+                                borderRadius={24}
+                                backgroundColor={isDark ? '#1a1a1a' : '#f0f0f0'}
+                                color={isDark ? '#ffffff' : '#000000'}
                                 fontFamily="Nunito_800ExtraBold"
                                 onPress={onCancel}
                                 disabled={loading}
                                 opacity={loading ? 0.6 : 1}
                                 pressStyle={{ scale: 0.98, opacity: 0.9 }}
                             >
-                                Stay in quiz
+                                Cancel
                             </Button>
 
                             <Button
                                 flex={1}
                                 height={48}
-                                borderRadius={16}
+                                borderRadius={24}
                                 backgroundColor={accent}
                                 color="#ffffff"
                                 fontFamily="Nunito_900Black"
@@ -536,7 +534,7 @@ const ExitQuizDialog: React.FC<ExitDialogProps> = ({ visible, isDark, loading, o
                                 opacity={loading ? 0.6 : 1}
                                 pressStyle={{ scale: 0.98, opacity: 0.9 }}
                             >
-                                {loading ? 'Wrapping up...' : 'Exit now'}
+                                {loading ? 'Exiting...' : 'Exit'}
                             </Button>
                         </XStack>
                     </YStack>

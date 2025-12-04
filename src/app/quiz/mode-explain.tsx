@@ -16,31 +16,31 @@ const MODE_DETAILS: Record<
 > = {
   adaptive: {
     label: 'Adaptive Mode',
-    color: '#6ac467ff',
+    color: '#059669',
     description: 'Questions adapt to your skill level',
     icon: require('../../../assets/images/modes/brain.png'),
   },
   balanced: {
     label: 'Balanced Mode',
-    color: '#8B5CF6',
+    color: '#7c3aed',
     description: 'Perfect mix of easy, medium, and hard questions',
     icon: require('../../../assets/images/modes/libra.png'),
   },
   weak_area: {
     label: 'Weak Spots',
-    color: '#F59E0B',
+    color: '#d97706',
     description: 'Focus on topics where you need improvement',
     icon: require('../../../assets/images/modes/weakness.png'),
   },
   hard_core: {
     label: 'Hardcore Mode',
-    color: '#EF4444',
+    color: '#dc2626',
     description: 'Challenge yourself with the toughest questions',
     icon: require('../../../assets/images/modes/sign.png'),
   },
   subject_focus: {
     label: 'Subject Focus',
-    color: '#06B6D4',
+    color: '#0891b2',
     description: 'Master one subject at a time',
     icon: require('../../../assets/images/modes/brain.png'),
   },
@@ -64,9 +64,9 @@ export default function ModeExplainScreen() {
 
   const [isSharing, setIsSharing] = useState(false);
 
-  const bgColor = isDark ? '#0d0b0bff' : '#fafef9ff';
-  const textColor = isDark ? '#ffffff' : '#0f172a';
-  const textSecondary = isDark ? '#a3a3a3' : '#64748b';
+  const bgColor = isDark ? '#0a0a0a' : '#f8fafc';
+  const textColor = isDark ? '#e2e8f0' : '#1e293b';
+  const textSecondary = isDark ? '#94a3b8' : '#64748b';
 
   const handleShare = async () => {
     try {
@@ -184,7 +184,7 @@ export default function ModeExplainScreen() {
               maxWidth={280}
               opacity={0.7}
             >
-We’re here to make boring exam prep fun and enjoyable.            </Text>
+              We’re here to make boring exam prep fun and enjoyable.            </Text>
           </Animated.View>
         </YStack>
 

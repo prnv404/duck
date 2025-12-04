@@ -1,8 +1,6 @@
 import React from 'react';
 import { YStack, XStack, Text } from 'tamagui';
-import { StyleSheet, Image, Pressable, ActivityIndicator } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, Image, Pressable, ActivityIndicator, View } from 'react-native';
 
 interface GoogleSignInButtonProps {
     onPress: () => void;
@@ -17,7 +15,6 @@ export function GoogleSignInButton({
     disabled = false,
     error,
 }: GoogleSignInButtonProps) {
-    const isDark = useColorScheme() === 'dark';
     const isDisabled = disabled || loading;
 
     return (
@@ -25,35 +22,20 @@ export function GoogleSignInButton({
             <Pressable
                 onPress={onPress}
                 disabled={isDisabled}
+                android_ripple={{ color: 'rgba(255,255,255,0.1)', borderless: false }}
                 style={({ pressed }) => [
                     styles.button,
                     {
-                        opacity: isDisabled ? 0.6 : 1,
-                        transform: [{ scale: pressed ? 0.97 : 1 }],
+                        opacity: isDisabled ? 0.6 : pressed ? 0.9 : 1,
+                        transform: [{ scale: pressed ? 0.98 : 1 }],
                     },
                 ]}
             >
-                <LinearGradient
-                    colors={isDark ? ['#ffffff', '#a8a9abff'] : ['#0e0f0fff', '#131517ff']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={[
-                        StyleSheet.absoluteFill,
-                        {
-                            borderRadius: 16,
-                            shadowColor: isDark ? '#fafafaff' : '#000',
-                            shadowOffset: { width: 0, height: 6 },
-                            shadowOpacity: isDark ? 0.3 : 0.15,
-                            shadowRadius: 16,
-                            elevation: 6,
-                        },
-                    ]}
-                />
+                <View style={styles.buttonBackground} />
                 <XStack
                     alignItems="center"
                     justifyContent="center"
                     gap="$3"
-                    zIndex={1}
                     width="100%"
                     paddingHorizontal="$4"
                 >
@@ -66,12 +48,12 @@ export function GoogleSignInButton({
                     )}
                     <XStack alignItems="center" gap="$2">
                         {loading && (
-                            <ActivityIndicator size="small" color={isDark ? '#0a0f0dff' : '#ffffff'} />
+                            <ActivityIndicator size="small" color="#ffffff" />
                         )}
                         <Text
                             fontFamily="Nunito_900Black"
                             fontSize={18}
-                            color={isDark ? '#111315ff' : '#ffffff'}
+                            color="#ffffff"
                             letterSpacing={-0.5}
                         >
                             {loading ? 'Signing you in...' : 'Continue with Google'}
@@ -82,12 +64,12 @@ export function GoogleSignInButton({
 
             {error && (
                 <YStack
-                    backgroundColor={isDark ? 'rgba(239,68,68,0.12)' : '#fef2f2'}
+                    backgroundColor="#fef2f2"
                     borderRadius={14}
                     px="$4"
                     py="$3"
                     borderWidth={1}
-                    borderColor={isDark ? 'rgba(239,68,68,0.25)' : '#fecaca'}
+                    borderColor="#fecaca"
                 >
                     <XStack alignItems="center" justifyContent="center" gap="$2">
                         <Text fontSize={16}>⚠️</Text>
@@ -108,6 +90,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
+        backgroundColor: '#1a1a1a',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+        elevation: 6,
+    },
+    buttonBackground: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 16,
     },
 });
 

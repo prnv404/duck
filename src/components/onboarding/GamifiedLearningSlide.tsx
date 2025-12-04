@@ -22,10 +22,10 @@ export const GamifiedLearningSlide: React.FC<GamifiedLearningSlideProps> = ({
     totalSteps,
 }) => {
     const insets = useSafeAreaInsets();
-    const bgColor = isDark ? '#151516ff' : '#f8fafc';
-    const textColor = isDark ? '#eeebebff' : '#18181b';
-    const accent = isDark ? '#fefefeff' : '#080909ff';
-    const muted = isDark ? '#a1a1aa' : '#64748b';
+    const bgColor = isDark ? '#f8fafc' : '#f8fafc';
+    const textColor = isDark ? '#18181b' : '#18181b';
+    const accent = isDark ? '#080909ff' : '#080909ff';
+    const muted = isDark ? '#64748b' : '#64748b';
 
     return (
         <YStack
@@ -87,7 +87,7 @@ export const GamifiedLearningSlide: React.FC<GamifiedLearningSlideProps> = ({
                     height={56}
                     borderRadius={16}
                     backgroundColor={accent}
-                    color={isDark ? '#000000' : '#ffffff'}
+                    color={isDark ? '#ffffff' : '#ffffff'}
                     fontSize="$5"
                     fontWeight="700"
                     onPress={onNext}

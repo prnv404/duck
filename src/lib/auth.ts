@@ -7,7 +7,7 @@ import * as SecureStore from 'expo-secure-store';
  * Uses expo-secure-store for secure token storage
  */
 export const authClient = createAuthClient({
-    baseURL: "https://delia-unsigneted-marcela.ngrok-free.dev",
+    baseURL: "https://duck-server-production.up.railway.app",
     plugins: [
         expoClient({
             scheme: 'duck', // CRITICAL: Must match app.json scheme for OAuth callbacks

@@ -43,7 +43,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                     <Button
                         unstyled
                         onPress={() => onFeedback('like')}
-                        bg={questionFeedback === 'like' ? (isDark ? '#22c55e' : '#4ade80') : (isDark ? '#1f2937' : '#f3f4f6')}
+                        bg={questionFeedback === 'like' ? (isDark ? '#059669' : '#10b981') : (isDark ? '#334155' : '#f1f5f9')}
                         p="$2"
                         br={8}
                         pressStyle={{ scale: 0.95 }}
@@ -61,7 +61,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                     <Button
                         unstyled
                         onPress={() => onFeedback('dislike')}
-                        bg={questionFeedback === 'dislike' ? (isDark ? '#ef4444' : '#f87171') : (isDark ? '#37241fff' : '#f6f3f4ff')}
+                        bg={questionFeedback === 'dislike' ? (isDark ? '#8b4545' : '#f87171') : (isDark ? '#334155' : '#f1f5f9')}
                         p="$2"
                         br={8}
                         pressStyle={{ scale: 0.95 }}
@@ -101,7 +101,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                                 key={reason.id}
                                 unstyled
                                 onPress={() => onFeedbackReason(reason.id)}
-                                bg={feedbackReason === reason.id ? (isDark ? '#ef4444' : '#fca5a5') : (isDark ? '#374151' : '#ffffff')}
+                                bg={feedbackReason === reason.id ? (isDark ? '#8b4545' : '#fca5a5') : (isDark ? '#334155' : '#ffffff')}
                                 p="$2.5"
                                 br={8}
                                 pressStyle={{ scale: 0.98 }}

@@ -281,10 +281,10 @@ interface LogoutDialogProps {
 }
 
 const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, onCancel, onConfirm }) => {
-  const accent = isDark ? '#dc2626' : '#b91c1c';
-  const accentBg = isDark ? 'rgba(220,38,38,0.15)' : 'rgba(185,28,28,0.12)';
-  const bg = isDark ? '#151516ff' : '#f8fafc';
-  const subText = isDark ? '#a1a1aa' : '#64748b';
+  const accent = '#ef4444';
+  const accentBg = isDark ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.12)';
+  const bg = isDark ? '#000000' : '#ffffff';
+  const subText = isDark ? '#999999' : '#666666';
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -317,7 +317,7 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, o
               </YStack>
 
               <YStack gap="$2" ai="center">
-                <Text fontSize={20} fontFamily="Nunito_900Black" color={isDark ? '#eeebebff' : '#18181b'}>
+                <Text fontSize={20} fontFamily="Nunito_900Black" color={isDark ? '#ffffff' : '#000000'}>
                   Sign out of Duck?
                 </Text>
                 <Text fontSize={15} fontFamily="Nunito_600SemiBold" color={subText} textAlign="center">
@@ -330,24 +330,22 @@ const LogoutDialog: React.FC<LogoutDialogProps> = ({ visible, isDark, loading, o
               <Button
                 flex={1}
                 height={48}
-                borderRadius={16}
-                borderWidth={1.5}
-                borderColor={isDark ? '#27272a' : '#e2e8f0'}
-                backgroundColor={isDark ? '#18181b' : '#ffffff'}
-                color={isDark ? '#e2e8f0' : '#18181b'}
+                borderRadius={24}
+                backgroundColor={isDark ? '#1a1a1a' : '#f0f0f0'}
+                color={isDark ? '#ffffff' : '#000000'}
                 fontFamily="Nunito_800ExtraBold"
                 onPress={onCancel}
                 disabled={loading}
                 opacity={loading ? 0.6 : 1}
                 pressStyle={{ scale: 0.98, opacity: 0.9 }}
               >
-                Stay logged in
+                Cancel
               </Button>
 
               <Button
                 flex={1}
                 height={48}
-                borderRadius={16}
+                borderRadius={24}
                 backgroundColor={accent}
                 color="#ffffff"
                 fontFamily="Nunito_900Black"

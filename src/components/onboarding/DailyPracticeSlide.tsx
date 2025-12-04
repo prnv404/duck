@@ -22,10 +22,10 @@ export const DailyPracticeSlide: React.FC<DailyPracticeSlideProps> = ({
     totalSteps,
 }) => {
     const insets = useSafeAreaInsets();
-    const bgColor = isDark ? '#151516ff' : '#f8fafc';
-    const textColor = isDark ? '#eeebebff' : '#18181b';
-    const accent = isDark ? '#fefefeff' : '#080909ff';
-    const muted = isDark ? '#a1a1aa' : '#64748b';
+    const bgColor = isDark ? '#ffffffff' : '#ffffffff';
+    const textColor = isDark ? '#020202ff' : '#18181b';
+    const accent = isDark ? '#000000ff' : '#080909ff';
+    const muted = isDark ? '#0f0f10ff' : '#64748b';
 
     return (
         <YStack
@@ -87,7 +87,7 @@ export const DailyPracticeSlide: React.FC<DailyPracticeSlideProps> = ({
                     height={56}
                     borderRadius={16}
                     backgroundColor={accent}
-                    color={isDark ? '#000000' : '#ffffff'}
+                    color={isDark ? '#efeeeeff' : '#ffffff'}
                     fontSize="$5"
                     fontWeight="700"
                     onPress={onNext}

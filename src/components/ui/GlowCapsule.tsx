@@ -17,19 +17,19 @@ function resolveHex(c: string) {
   if (c.startsWith('#')) return c
   const s = c.toLowerCase()
   if (s.includes('pink')) return '#ec4899'
-  if (s.includes('green')) return '#22c55e'
+  if (s.includes('green')) return '#10b981'
   if (s.includes('purple')) return '#a855f7'
   if (s.includes('blue')) return '#3b82f6'
   if (s.includes('red')) return '#ef4444'
   if (s.includes('yellow')) return '#f59e0b'
   if (s.includes('orange')) return '#f97316'
-  if (s.includes('cyan') || s.includes('teal')) return '#06b6d4'
-  return '#22c55e'
+  if (s.includes('cyan') || s.includes('teal')) return '#0891b2'
+  return '#10b981'
 }
 
-export default function GlowCapsule({ title, subtitle, color = '#22c55e', icon = 'flash', active, children, onPress, ...rest }: GlowCapsuleProps) {
+export default function GlowCapsule({ title, subtitle, color = '#10b981', icon = 'flash', active, children, onPress, ...rest }: GlowCapsuleProps) {
   const pulse = useSharedValue(0)
-  const glowHex = typeof color === 'string' ? resolveHex(color) : '#22c55e'
+  const glowHex = typeof color === 'string' ? resolveHex(color) : '#10b981'
   const glow = useAnimatedStyle(() => ({
     opacity: active ? 0.2 + pulse.value * 0.25 : 0,
     transform: [{ scale: 0.98 + pulse.value * 0.02 }],
