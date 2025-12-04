@@ -1,24 +1,25 @@
 import { apiClient } from './api-client';
 
+/**
+ * User response DTO matching Better Auth user model
+ */
 export interface UserResponseDto {
     id: string;
-    username: string;
-    phone: string;
-    fullName?: string;
-    avatarUrl?: string;
-    targetExam?: string;
-    fcmToken?: string;
-    notificationEnabled?: boolean;
-    createdAt?: string;
-    lastActiveAt?: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image: string | null;
+    createdAt: string;
+    updatedAt: string;
 }
 
+/**
+ * DTO for updating user profile
+ * Only includes fields the backend accepts for updates
+ */
 export interface UpdateUserDto {
-    fullName?: string;
-    avatarUrl?: string;
-    targetExam?: string;
-    notificationEnabled?: boolean;
-    fcmToken?: string;
+    name?: string;
+    image?: string;
 }
 
 export interface UserStatsResponseDto {

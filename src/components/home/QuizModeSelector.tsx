@@ -63,10 +63,10 @@ export default function SolidModeSelector({
             {/* --- Context Header --- */}
             <YStack mb="$4" ai="center">
                 <Text fontSize={20} fontFamily="Nunito_800ExtraBold" color={text} textAlign="center">
-                    🎯 Practice Questions
+                     Practice Questions
                 </Text>
                 <Text fontSize={14} fontFamily="Nunito_600SemiBold" color={textSecondary} textAlign="center">
-                    Build knowledge and crack your exams
+                    Build knowledge brick by brick 🧱
                 </Text>
             </YStack>
 

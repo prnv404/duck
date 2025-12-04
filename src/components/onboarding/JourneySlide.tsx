@@ -22,7 +22,7 @@ export const JourneySlide: React.FC<JourneySlideProps> = ({
 }) => {
     const insets = useSafeAreaInsets();
 
-    const bgColor = isDark ? '#050505' : '#f8f7f2';
+    const bgColor = isDark ? '#151516ff' : '#f8f7f2';
     const textColor = isDark ? '#ffffff' : '#18181b';
     const muted = isDark ? '#bfbfbf' : '#5a5a62';
     const accent = isDark ? '#fbbf24' : '#b45309';

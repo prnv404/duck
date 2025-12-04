@@ -22,7 +22,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.ducklearning.duck",
       "versionCode": 1
-      
     },
     "web": {
       "output": "static",
@@ -42,7 +41,9 @@
           }
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-asset",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

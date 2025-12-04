@@ -1,7 +1,8 @@
-import GamificationHeader from '@/components/GamificationHeader';
-import LevelProgressCard from '@/components/home/LevelProgressCard';
+import StreakCalendar from '@/components/StreakCalendar';
 import QuizModeSelector from '@/components/home/QuizModeSelector';
 import FocusAreas from '@/components/home/FocusAreas';
+import HomeHeader from '@/components/home/HomeHeader';
+import HomeLoadingSkeleton from '@/components/home/HomeLoadingSkeleton';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -9,8 +10,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { YStack, XStack } from 'tamagui';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { YStack } from 'tamagui';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authAPI } from '@/services/auth.api';
 import { curriculumAPI } from '@/services/curriculum.api';
@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const [userStats, setUserStats] = useState<any>(null);
   const [subjectAccuracy, setSubjectAccuracy] = useState<any[]>([]);
   const [streakData, setStreakData] = useState<any>(null);
+  const [streakStats, setStreakStats] = useState({ currentStreak: 0, longestStreak: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedMode, setSelectedMode] = useState('balanced');
 
@@ -69,7 +70,7 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     try {
-      const [user, stats, accuracy, streak] = await Promise.all([
+      const [user, stats, accuracy, streakResponse] = await Promise.all([
         authAPI.getCurrentUser(),
         userAPI.getStats(),
         curriculumAPI.getMySubjectAccuracy(),
@@ -79,7 +80,23 @@ export default function HomeScreen() {
       setUserData(user);
       setUserStats(stats);
       setSubjectAccuracy(accuracy);
-      setStreakData(streak);
+
+      // Transform streak calendar data to match component format
+      const transformedStreakData: { [date: string]: number } = {};
+      if (streakResponse?.calendar) {
+        streakResponse.calendar.forEach((entry) => {
+          // Extract date in YYYY-MM-DD format
+          const dateStr = entry.activityDate.split('T')[0];
+          // Use questionsAnswered as activity count (you can adjust this logic)
+          transformedStreakData[dateStr] = entry.questionsAnswered;
+        });
+      }
+
+      setStreakData(transformedStreakData);
+      setStreakStats({
+        currentStreak: streakResponse?.currentStreak || 0,
+        longestStreak: streakResponse?.longestStreak || 0,
+      });
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -89,20 +106,15 @@ export default function HomeScreen() {
   };
 
   const displayStats = {
-    streak: userStats?.currentStreak || 0,
+    streak: streakStats.currentStreak || userStats?.currentStreak || 0,
     xp: userStats?.totalXp || 0,
     energy: userStats?.energy || 0,
     level: userStats?.level || 1,
     xpToNextLevel: userStats?.xpToNextLevel || 100,
   };
 
-  const currentLevelXp = displayStats.xp; // Simplified for now
-  const nextLevelXp = displayStats.xp + displayStats.xpToNextLevel;
-  const xpProgress = nextLevelXp > 0 ? Math.round((currentLevelXp / nextLevelXp) * 100) : 0;
-
   const handleShowModeExplanation = async (mode: 'adaptive' | 'balanced' | 'weak_area' | 'hard_core' | 'subject_focus') => {
     await Haptics.selectionAsync();
-    // Navigate to full-screen explanation route
     router.push(`/quiz/mode-explain?mode=${mode}` as any);
   };
 
@@ -111,14 +123,9 @@ export default function HomeScreen() {
     router.push(`/quiz?mode=${selectedMode}` as any);
   };
 
-  const handleUnlockAndStart = async () => {
-    // Directly start quiz (previously used to close modal then start)
-    await handleStartQuiz();
-  };
-
   if (loading) {
     return (
-      <YStack f={1} bg={isDark ? '#282626ff' : '#ffffff'}>
+      <YStack f={1} bg={isDark ? '#0d0b0bff' : '#fafef9ff'}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
@@ -127,57 +134,14 @@ export default function HomeScreen() {
             paddingHorizontal: 16,
           }}
         >
-          <YStack gap="$5">
-            {/* Minimal Header */}
-            <Animated.View entering={FadeInDown.delay(100)}>
-              <GamificationHeader
-                streak={displayStats.streak}
-                xp={displayStats.xp}
-                energy={displayStats.energy}
-                userName={userData?.fullName || userData?.username || 'Learner'}
-              />
-            </Animated.View>
-
-            {/* Level Progress Card */}
-            <LevelProgressCard
-              level={displayStats.level}
-              xp={displayStats.xp}
-              xpToNextLevel={displayStats.xpToNextLevel}
-              xpProgress={xpProgress}
-              isDark={isDark}
-            />
-
-            {/* Quiz Mode Selector - 2x2 Grid */}
-            <QuizModeSelector
-              selectedMode={selectedMode as any}
-              onModeSelect={setSelectedMode}
-              onStartQuiz={handleStartQuiz}
-              isDark={isDark}
-              onShowModeExplanation={handleShowModeExplanation}
-            />
-
-            {/* Focus Areas */}
-            <FocusAreas
-              currentStreak={displayStats.streak}
-              isDark={isDark}
-              subjectData={subjectAccuracy}
-              streakData={streakData}
-              onSubjectSelect={(subject) => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-                router.push(`/quiz?mode=subject_focus&subjectId=${subject.subjectId}` as any);
-              }}
-            />
-
-          </YStack>
+          <HomeLoadingSkeleton isDark={isDark} />
         </ScrollView>
-
       </YStack>
-
     );
   }
 
   return (
-    <YStack f={1} bg={isDark ? '#120f0fff' : '#fafef9ff'}>
+    <YStack f={1} bg={isDark ? '#0d0b0bff' : '#fafef9ff'}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
@@ -187,26 +151,23 @@ export default function HomeScreen() {
         }}
       >
         <YStack gap="$5">
-          {/* Minimal Header */}
-          <Animated.View entering={FadeInDown.delay(100)}>
-            <GamificationHeader
-              streak={displayStats.streak}
-              xp={displayStats.xp}
-              energy={displayStats.energy}
-              userName={userData?.fullName || userData?.username || 'Learner'}
-            />
-          </Animated.View>
-
-          {/* Level Progress Card */}
-          <LevelProgressCard
+          {/* Header */}
+          <HomeHeader
+            userName={userData?.name || 'User'}
+            userImage={userData?.image}
             level={displayStats.level}
             xp={displayStats.xp}
-            xpToNextLevel={displayStats.xpToNextLevel}
-            xpProgress={xpProgress}
             isDark={isDark}
           />
 
-          {/* Quiz Mode Selector - 2x2 Grid */}
+          {/* Streak Calendar */}
+          <StreakCalendar
+            streakData={streakData}
+            currentStreak={streakStats.currentStreak}
+            longestStreak={streakStats.longestStreak}
+          />
+
+          {/* Quiz Mode Selector */}
           <QuizModeSelector
             selectedMode={selectedMode as any}
             onModeSelect={setSelectedMode}
@@ -223,16 +184,12 @@ export default function HomeScreen() {
             streakData={streakData}
             onSubjectSelect={(subject) => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              router.push(`/quiz?mode=subject_focus&subjectId=${subject.subjectId}` as any);
+              router.push(`/quiz/mode-explain?mode=subject_focus&subjectId=${subject.subjectId}&subjectName=${encodeURIComponent(subject.subjectName)}` as any);
             }}
           />
 
         </YStack>
       </ScrollView>
-
-      {/* Explanation is now a full screen route at /quiz/mode-explain */}
-
     </YStack>
-
   );
 }

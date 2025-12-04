@@ -28,36 +28,16 @@ export default function StreakCalendar({
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const scrollViewRef = useRef<ScrollView>(null)
 
-  // Generate sample streak data if none provided
-  const generateSampleData = (): StreakData => {
-    const data: StreakData = {}
-    const today = new Date()
-
-    for (let i = 0; i < 90; i++) {
-      const date = new Date(today)
-      date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
-
-      // Random activity level (0-5)
-      if (i < 7) {
-        data[dateStr] = Math.random() > 0.1 ? Math.floor(Math.random() * 5) + 1 : 0
-      } else {
-        data[dateStr] = Math.random() > 0.3 ? Math.floor(Math.random() * 5) + 1 : 0
-      }
-    }
-    return data
-  }
-
-  const data = Object.keys(streakData).length > 0 ? streakData : generateSampleData()
+  const data = streakData || {}
 
   // Get intensity color based on activity count
   const getIntensityColor = (count: number) => {
-    if (count === 0) return isDark ? '#161b22' : '#ebedf0'
-    if (count === 1) return isDark ? '#0e4429' : '#9be9a8'
-    if (count === 2) return isDark ? '#006d32' : '#40c463'
-    if (count === 3) return isDark ? '#26a641' : '#30a14e'
-    if (count >= 4) return isDark ? '#39d353' : '#216e39'
-    return isDark ? '#161b22' : '#ebedf0'
+    if (count === 0) return isDark ? '#27272A' : '#E4E4E7'
+    if (count === 1) return isDark ? '#065f46' : '#a7f3d0'
+    if (count === 2) return isDark ? '#047857' : '#6ee7b7'
+    if (count === 3) return isDark ? '#059669' : '#34d399'
+    if (count >= 4) return isDark ? '#10b981' : '#10b981'
+    return isDark ? '#27272A' : '#E4E4E7'
   }
 
   // Get last 7 days for compact view
@@ -147,46 +127,47 @@ export default function StreakCalendar({
     return (
       <Pressable onPress={toggleExpanded}>
         <YStack
-          bg={isDark ? '$gray2' : '#fff'}
-          br={20}
+          bg={isDark ? '#18181B' : '#FFFFFF'}
+          br={16}
           p="$4"
+          borderWidth={1}
+          borderColor={isDark ? '#27272A' : '#E4E4E7'}
           style={{
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 10,
+            shadowOpacity: isDark ? 0.3 : 0.05,
+            shadowRadius: 3,
+            elevation: 2,
           }}
         >
           <XStack ai="center" jc="space-between" mb="$3">
             <YStack>
-              <Text fontSize={16} fontWeight="800">🔥 Streak</Text>
-              <Text fontSize={12} color="$gray10">Tap to view full calendar</Text>
+              <Text fontSize={16} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0f172a'}>❤️‍🔥 Maintain streak bro</Text>
             </YStack>
             <YStack ai="flex-end">
               <XStack ai="center" gap="$1">
-                <Text fontSize={24} fontWeight="900" color="$orange9">{currentStreak}</Text>
-                <Text fontSize={12} color="$gray10">days</Text>
+                <Text fontSize={22} fontFamily="Nunito_900Black" color="#10b981">{currentStreak}</Text>
+                <Text fontSize={13} fontFamily="Nunito_600SemiBold" color={isDark ? '#a3a3a3' : '#64748b'}>days</Text>
               </XStack>
-              <Text fontSize={11} color="$gray9">Best: {longestStreak}</Text>
             </YStack>
           </XStack>
 
           {/* Last 7 Days */}
-          <XStack jc="space-between" mb="$2">
+          <XStack jc="space-between">
             {last7Days.map((day, idx) => (
               <YStack key={idx} ai="center" gap="$1">
-                <Text fontSize={10} color="$gray10" fontWeight="600">
+                <Text fontSize={11} color={isDark ? '#a3a3a3' : '#64748b'} fontFamily="Nunito_700Bold">
                   {day.dayName}
                 </Text>
                 <YStack
-                  w={36}
-                  h={36}
-                  br={10}
+                  w={34}
+                  h={34}
+                  br={9}
                   ai="center"
                   jc="center"
                   bg={getIntensityColor(day.count)}
                   style={day.count > 0 ? {
-                    shadowColor: '#14b8a6',
+                    shadowColor: '#10b981',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.3,
                     shadowRadius: 4,
@@ -196,20 +177,20 @@ export default function StreakCalendar({
                     <Ionicons name="checkmark" size={16} color="#fff" />
                   )}
                 </YStack>
-                <Text fontSize={10} color="$gray9">{day.day}</Text>
+                <Text fontSize={10} fontFamily="Nunito_600SemiBold" color={isDark ? '#71717a' : '#a1a1aa'}>{day.day}</Text>
               </YStack>
             ))}
           </XStack>
 
           {/* Legend */}
-          <XStack ai="center" jc="space-between" mt="$2" pt="$2" borderTopWidth={1} borderTopColor="$gray4">
-            <Text fontSize={11} color="$gray10">Less</Text>
+          <XStack ai="center" jc="space-between" mt="$2" pt="$2" borderTopWidth={1} borderTopColor={isDark ? '#27272A' : '#E4E4E7'}>
+            <Text fontSize={11} fontFamily="Nunito_600SemiBold" color={isDark ? '#a3a3a3' : '#64748b'}>Less</Text>
             <XStack gap="$1">
               {[0, 1, 2, 3, 4].map(level => (
                 <YStack key={level} w={16} h={16} br={4} bg={getIntensityColor(level)} />
               ))}
             </XStack>
-            <Text fontSize={11} color="$gray10">More</Text>
+            <Text fontSize={11} fontFamily="Nunito_600SemiBold" color={isDark ? '#a3a3a3' : '#64748b'}>More</Text>
           </XStack>
         </YStack>
       </Pressable>
@@ -220,43 +201,45 @@ export default function StreakCalendar({
   return (
     <Animated.View entering={FadeIn}>
       <YStack
-        bg={isDark ? '$gray2' : '#fff'}
-        br={20}
+        bg={isDark ? '#18181B' : '#FFFFFF'}
+        br={16}
         p="$4"
+        borderWidth={1}
+        borderColor={isDark ? '#27272A' : '#E4E4E7'}
         style={{
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isDark ? 0.3 : 0.05,
+          shadowRadius: 3,
+          elevation: 2,
         }}
       >
         {/* Header */}
         <XStack ai="center" jc="space-between" mb="$3">
           <YStack>
-            <Text fontSize={18} fontWeight="800">🔥 Activity Streak</Text>
-            <Text fontSize={12} color="$gray10">Your learning journey</Text>
+            <Text fontSize={18} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0f172a'}>🔥 Activity Streak</Text>
           </YStack>
           <Pressable onPress={toggleExpanded}>
-            <Circle size={32} bg="$gray4">
-              <Ionicons name="close" size={18} color={isDark ? '#e5e7eb' : '#374151'} />
+            <Circle size={30} bg={isDark ? '#27272A' : '#F4F4F5'}>
+              <Ionicons name="close" size={18} color={isDark ? '#ffffff' : '#0f172a'} />
             </Circle>
           </Pressable>
         </XStack>
 
         {/* Stats */}
         <XStack gap="$3" mb="$4">
-          <YStack f={1} bg="$orange3" p="$3" br={12}>
-            <Text fontSize={11} color="$orange10" fontWeight="600">CURRENT</Text>
+          <YStack f={1} bg={isDark ? '#065f4620' : '#d1fae5'} p="$3" br={12} borderWidth={1} borderColor={isDark ? '#065f46' : '#a7f3d0'}>
+            <Text fontSize={11} color="#10b981" fontFamily="Nunito_700Bold">CURRENT</Text>
             <XStack ai="flex-end" gap="$1">
-              <Text fontSize={28} fontWeight="900" color="$orange11">{currentStreak}</Text>
-              <Text fontSize={12} color="$orange10" mb="$1">days</Text>
+              <Text fontSize={26} fontFamily="Nunito_900Black" color="#10b981">{currentStreak}</Text>
+              <Text fontSize={12} fontFamily="Nunito_600SemiBold" color="#10b981" mb="$1">days</Text>
             </XStack>
           </YStack>
-          <YStack f={1} bg="$purple3" p="$3" br={12}>
-            <Text fontSize={11} color="$purple10" fontWeight="600">LONGEST</Text>
+          <YStack f={1} bg={isDark ? '#7c3aed20' : '#ede9fe'} p="$3" br={12} borderWidth={1} borderColor={isDark ? '#7c3aed' : '#c4b5fd'}>
+            <Text fontSize={11} color="#8B5CF6" fontFamily="Nunito_700Bold">LONGEST</Text>
             <XStack ai="flex-end" gap="$1">
-              <Text fontSize={28} fontWeight="900" color="$purple11">{longestStreak}</Text>
-              <Text fontSize={12} color="$purple10" mb="$1">days</Text>
+              <Text fontSize={26} fontFamily="Nunito_900Black" color="#8B5CF6">{longestStreak}</Text>
+              <Text fontSize={12} fontFamily="Nunito_600SemiBold" color="#8B5CF6" mb="$1">days</Text>
             </XStack>
           </YStack>
         </XStack>
@@ -264,14 +247,14 @@ export default function StreakCalendar({
         {/* Month Navigation */}
         <XStack ai="center" jc="space-between" mb="$3">
           <Pressable onPress={() => changeMonth('prev')}>
-            <Circle size={36} bg="$gray4">
-              <Ionicons name="chevron-back" size={18} color={isDark ? '#e5e7eb' : '#374151'} />
+            <Circle size={34} bg={isDark ? '#27272A' : '#F4F4F5'}>
+              <Ionicons name="chevron-back" size={18} color={isDark ? '#ffffff' : '#0f172a'} />
             </Circle>
           </Pressable>
-          <Text fontSize={16} fontWeight="700">{monthName}</Text>
+          <Text fontSize={16} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0f172a'}>{monthName}</Text>
           <Pressable onPress={() => changeMonth('next')}>
-            <Circle size={36} bg="$gray4">
-              <Ionicons name="chevron-forward" size={18} color={isDark ? '#e5e7eb' : '#374151'} />
+            <Circle size={34} bg={isDark ? '#27272A' : '#F4F4F5'}>
+              <Ionicons name="chevron-forward" size={18} color={isDark ? '#ffffff' : '#0f172a'} />
             </Circle>
           </Pressable>
         </XStack>
@@ -279,8 +262,8 @@ export default function StreakCalendar({
         {/* Day Labels */}
         <XStack jc="space-around" mb="$2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-            <YStack key={idx} w={36} ai="center">
-              <Text fontSize={11} fontWeight="600" color="$gray10">{day}</Text>
+            <YStack key={idx} w={34} ai="center">
+              <Text fontSize={11} fontFamily="Nunito_700Bold" color={isDark ? '#a3a3a3' : '#64748b'}>{day}</Text>
             </YStack>
           ))}
         </XStack>
@@ -290,7 +273,7 @@ export default function StreakCalendar({
           {weeks.map((week, weekIdx) => (
             <XStack key={weekIdx} jc="space-around">
               {week.map((day, dayIdx) => (
-                <YStack key={dayIdx} w={36} h={36} ai="center" jc="center">
+                <YStack key={dayIdx} w={34} h={34} ai="center" jc="center">
                   {day ? (
                     <Pressable
                       onPress={async () => {
@@ -298,14 +281,14 @@ export default function StreakCalendar({
                       }}
                     >
                       <YStack
-                        w={32}
-                        h={32}
-                        br={8}
+                        w={30}
+                        h={30}
+                        br={7}
                         ai="center"
                         jc="center"
                         bg={getIntensityColor(day.count)}
                         style={day.count > 0 ? {
-                          shadowColor: '#14b8a6',
+                          shadowColor: '#10b981',
                           shadowOffset: { width: 0, height: 1 },
                           shadowOpacity: 0.3,
                           shadowRadius: 3,
@@ -313,15 +296,15 @@ export default function StreakCalendar({
                       >
                         <Text
                           fontSize={11}
-                          fontWeight="600"
-                          color={day.count > 0 ? '#fff' : '$gray9'}
+                          fontFamily="Nunito_700Bold"
+                          color={day.count > 0 ? '#fff' : (isDark ? '#71717a' : '#a1a1aa')}
                         >
                           {day.day}
                         </Text>
                       </YStack>
                     </Pressable>
                   ) : (
-                    <YStack w={32} h={32} />
+                    <YStack w={30} h={30} />
                   )}
                 </YStack>
               ))}
@@ -330,40 +313,15 @@ export default function StreakCalendar({
         </YStack>
 
         {/* Legend */}
-        <XStack ai="center" jc="space-between" mt="$3" pt="$3" borderTopWidth={1} borderTopColor="$gray4">
-          <Text fontSize={11} color="$gray10">Less active</Text>
+        <XStack ai="center" jc="space-between" mt="$3" pt="$3" borderTopWidth={1} borderTopColor={isDark ? '#27272A' : '#E4E4E7'}>
+          <Text fontSize={11} fontFamily="Nunito_600SemiBold" color={isDark ? '#a3a3a3' : '#64748b'}>Less</Text>
           <XStack gap="$1.5">
             {[0, 1, 2, 3, 4].map(level => (
-              <YStack key={level} w={20} h={20} br={5} bg={getIntensityColor(level)} />
+              <YStack key={level} w={18} h={18} br={5} bg={getIntensityColor(level)} />
             ))}
           </XStack>
-          <Text fontSize={11} color="$gray10">More active</Text>
+          <Text fontSize={11} fontFamily="Nunito_600SemiBold" color={isDark ? '#a3a3a3' : '#64748b'}>More</Text>
         </XStack>
-
-        {/* Activity Summary */}
-        <YStack mt="$3" pt="$3" borderTopWidth={1} borderTopColor="$gray4">
-          <Text fontSize={13} fontWeight="700" mb="$2">This Month</Text>
-          <XStack jc="space-between">
-            <YStack ai="center">
-              <Text fontSize={20} fontWeight="800" color="$green9">
-                {Object.values(data).filter(v => v > 0).length}
-              </Text>
-              <Text fontSize={11} color="$gray10">Active days</Text>
-            </YStack>
-            <YStack ai="center">
-              <Text fontSize={20} fontWeight="800" color="$blue9">
-                {Object.values(data).reduce((a, b) => a + b, 0)}
-              </Text>
-              <Text fontSize={11} color="$gray10">Total activities</Text>
-            </YStack>
-            <YStack ai="center">
-              <Text fontSize={20} fontWeight="800" color="$purple9">
-                {Math.round((Object.values(data).filter(v => v > 0).length / 30) * 100)}%
-              </Text>
-              <Text fontSize={11} color="$gray10">Consistency</Text>
-            </YStack>
-          </XStack>
-        </YStack>
       </YStack>
     </Animated.View>
   )

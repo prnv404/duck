@@ -32,7 +32,7 @@ export const NameInputScreen: React.FC<NameInputScreenProps> = ({
         onComplete(name);
     };
 
-    const bgColor = isDark ? '#0a0a0a' : '#faf9f6';
+    const bgColor = isDark ? '#151516ff' : '#faf9f6';
     const textColor = isDark ? '#fff' : '#2c2c2c';
     const mutedColor = isDark ? '#999' : '#666';
     const inputBg = isDark ? '#1a1a1a' : '#ffffff';

@@ -22,7 +22,7 @@ export const ValuePropSlide: React.FC<ValuePropSlideProps> = ({
 }) => {
     const insets = useSafeAreaInsets();
 
-    const bgColor = isDark ? '#030303' : '#fbfaf5';
+    const bgColor = isDark ? '#151516ff' : '#fbfaf5';
     const textColor = isDark ? '#ffffff' : '#18181b';
     const muted = isDark ? '#c7c7c7' : '#5f5f6b';
     const accent = isDark ? '#22d3ee' : '#0f8bff';

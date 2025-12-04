@@ -26,7 +26,7 @@ export const IdentitySlide: React.FC<IdentitySlideProps> = ({
     const insets = useSafeAreaInsets();
     const [loading, setLoading] = useState(false);
 
-    const bgColor = isDark ? '#030303' : '#fdfcf7';
+    const bgColor = isDark ? '#151516ff' : '#fdfcf7';
     const textColor = isDark ? '#fff' : '#18181b';
     const muted = isDark ? '#c5c5c5' : '#555';
     const inputBg = isDark ? '#0d0d0d' : '#ffffff';

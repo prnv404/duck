@@ -21,7 +21,7 @@ export const DailyPracticeSlide: React.FC<DailyPracticeSlideProps> = ({
     totalSteps,
 }) => {
     const insets = useSafeAreaInsets();
-    const bgColor = isDark ? '#020617' : '#f8fafc';
+    const bgColor = isDark ? '#151516ff' : '#f8fafc';
     const textColor = isDark ? '#eeebebff' : '#18181b';
     const accent = isDark ? '#fefefeff' : '#080909ff';
     const muted = isDark ? '#a1a1aa' : '#64748b';

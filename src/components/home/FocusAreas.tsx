@@ -12,44 +12,39 @@ interface SubjectData {
     performance: 'weak' | 'average' | 'strong';
 }
 
-interface StreakDataResponse {
-    currentStreak: number;
-    longestStreak: number;
-    calendar: {
-        activityDate: string;
-        quizzesCompleted: number;
-        questionsAnswered: number;
-        xpEarned: number;
-    }[];
-}
-
 interface FocusAreasProps {
     currentStreak: number;
     isDark: boolean;
     subjectData?: SubjectData[];
-    streakData?: StreakDataResponse | null;
+    streakData?: any;
     onSubjectSelect?: (subject: SubjectData) => void;
 }
 
-export default function FocusAreas({ currentStreak, isDark, subjectData = [], streakData, onSubjectSelect }: FocusAreasProps) {
-
+export default function FocusAreas({
+    isDark,
+    subjectData = [],
+    onSubjectSelect,
+}: FocusAreasProps) {
     const handleSubjectPress = (subject: SubjectData) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         if (onSubjectSelect) {
             onSubjectSelect(subject);
         } else {
-            Alert.alert("Session Started", `Initializing practice module for ${subject.subjectName}...`);
+            Alert.alert(
+                'Session Started',
+                `Initializing practice module for ${subject.subjectName}...`
+            );
         }
     };
 
     const textMain = isDark ? '#ffffff' : '#0f172a';
     const textSub = isDark ? '#a3a3a3' : '#64748b';
+    const cardBg = isDark ? '#18181B' : '#FFFFFF';
+    const border = isDark ? '#27272A' : '#E4E4E7';
     const axisColor = isDark ? '#404040' : '#e2e8f0';
-    const cardBg = isDark ? '#1a1a1a' : '#f8fafc';
-    const barBg = isDark ? '#0a0a0a' : '#ffffff';
 
     // Transform API subject data to BarChart format
-    const barData = subjectData.map(subject => {
+    const barData = subjectData.map((subject) => {
         let color = '#f59e0b'; // Default Average (Yellow)
 
         if (subject.performance === 'weak') {
@@ -62,12 +57,11 @@ export default function FocusAreas({ currentStreak, isDark, subjectData = [], st
             value: subject.accuracy,
             frontColor: color,
             topLabelComponent: () => (
-                <YStack ai="center" gap="$1" mb="$2">
+                <YStack ai="center" gap="$0.5" mb="$1">
                     <MaterialCommunityIcons
                         name="play-circle"
-                        size={16}
+                        size={18}
                         color={color}
-                        style={{ opacity: 0.9 }}
                     />
                     <Text fontSize={11} color={color} fontFamily="Nunito_800ExtraBold">
                         {Math.round(subject.accuracy)}%
@@ -78,46 +72,69 @@ export default function FocusAreas({ currentStreak, isDark, subjectData = [], st
         };
     });
 
-    // Calculate dynamic width for scrollable chart
     const barWidth = 45;
     const spacing = 28;
 
     return (
-        <YStack gap="$4" mt="$4">
-
-            <Animated.View entering={FadeInDown.delay(1200)}>
-                <YStack gap="$2">
-                    <XStack jc="space-between" ai="center">
-                        <Text fontSize={20} fontFamily="Nunito_900Black" color={textMain} letterSpacing={-0.5}>
-                            Subject Performance
-                        </Text>
-                        <XStack ai="center" gap="$1.5" bg={cardBg} px="$2.5" py="$1.5" br={8}>
-                            <MaterialCommunityIcons name="gesture-tap" size={14} color={textSub} />
-                            <Text fontSize={11} color={textSub} fontFamily="Nunito_700Bold">
-                                Tap to Practice
-                            </Text>
-                        </XStack>
-                    </XStack>
-                    <Text fontSize={13} color={textSub} fontFamily="Nunito_600SemiBold">
-                        Track your accuracy across all subjects
+        <YStack gap="$3" mt="$2">
+            <Animated.View entering={FadeInDown.delay(200)}>
+                <YStack gap="$1">
+                    <Text
+                        fontSize={18}
+                        fontFamily="Nunito_800ExtraBold"
+                        color={textMain}
+                    >
+                        📊 Subject Performance
+                    </Text>
+                    <Text fontSize={12} fontFamily="Nunito_600SemiBold" color={textSub}>
+                        Your accuracy across subjects
                     </Text>
                 </YStack>
             </Animated.View>
 
-            <Animated.View entering={FadeInDown.delay(1300)}>
+            <Animated.View entering={FadeInDown.delay(300)}>
                 {barData.length > 0 ? (
                     <YStack
-                        bg={barBg}
+                        bg={cardBg}
                         p="$4"
                         br={16}
+                        borderWidth={1}
+                        borderColor={border}
                         style={{
-                            shadowColor: "#000",
+                            shadowColor: '#000',
                             shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: isDark ? 0 : 0.05,
-                            shadowRadius: 12,
-                            elevation: isDark ? 0 : 3,
+                            shadowOpacity: isDark ? 0.3 : 0.05,
+                            shadowRadius: 3,
+                            elevation: 2,
                         }}
                     >
+                        {/* Tap hint banner */}
+                        <XStack
+                            bg={isDark ? '#10b98120' : '#ecfdf5'}
+                            px="$3"
+                            py="$2"
+                            br={10}
+                            mb="$3"
+                            ai="center"
+                            jc="center"
+                            gap="$2"
+                            borderWidth={1}
+                            borderColor={isDark ? '#10b98140' : '#d1fae5'}
+                        >
+                            <MaterialCommunityIcons
+                                name="gesture-tap"
+                                size={16}
+                                color="#10b981"
+                            />
+                            <Text
+                                fontSize={12}
+                                fontFamily="Nunito_700Bold"
+                                color="#10b981"
+                            >
+                                Tap any bar to start a subject quiz
+                            </Text>
+                        </XStack>
+
                         <BarChart
                             data={barData}
                             barWidth={barWidth}
@@ -131,9 +148,9 @@ export default function FocusAreas({ currentStreak, isDark, subjectData = [], st
                             yAxisTextStyle={{
                                 color: textSub,
                                 fontSize: 10,
-                                fontFamily: 'Nunito_600SemiBold'
+                                fontFamily: 'Nunito_600SemiBold',
                             }}
-                            xAxisLabelTexts={subjectData.map(s => s.subjectName)}
+                            xAxisLabelTexts={subjectData.map((s) => s.subjectName)}
                             xAxisLabelTextStyle={{
                                 color: textMain,
                                 fontSize: 11,
@@ -150,27 +167,46 @@ export default function FocusAreas({ currentStreak, isDark, subjectData = [], st
                             scrollAnimation={true}
                             hideRules
                             showGradient={false}
-                            height={220}
+                            height={200}
                             yAxisLabelSuffix="%"
                             rotateLabel={false}
                             xAxisLabelsVerticalShift={5}
                         />
                     </YStack>
                 ) : (
-                    <YStack ai="center" py="$6" gap="$2">
+                    <YStack
+                        bg={cardBg}
+                        br={16}
+                        p="$5"
+                        borderWidth={1}
+                        borderColor={border}
+                        ai="center"
+                        gap="$2"
+                        style={{
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: isDark ? 0.3 : 0.05,
+                            shadowRadius: 3,
+                            elevation: 2,
+                        }}
+                    >
                         <MaterialCommunityIcons
                             name="chart-bar"
                             size={48}
                             color={textSub}
                             style={{ opacity: 0.3 }}
                         />
-                        <Text color={textSub} fontSize={14} textAlign="center" fontFamily="Nunito_600SemiBold">
+                        <Text
+                            color={textSub}
+                            fontSize={14}
+                            textAlign="center"
+                            fontFamily="Nunito_600SemiBold"
+                        >
                             Complete quizzes to see your subject performance
                         </Text>
                     </YStack>
                 )}
             </Animated.View>
-
         </YStack>
     );
 }

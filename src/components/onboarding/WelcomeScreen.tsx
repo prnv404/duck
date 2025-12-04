@@ -11,7 +11,7 @@ interface WelcomeScreenProps {
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, isDark }) => {
     const insets = useSafeAreaInsets();
 
-    const bgColor = isDark ? '#0a0a0a' : '#faf9f6';
+    const bgColor = isDark ? '#141313ff' : '#faf9f6';
     const textColor = isDark ? '#fff' : '#2c2c2c';
     const mutedColor = isDark ? '#999' : '#666';
     const borderColor = isDark ? '#333' : '#2c2c2c';

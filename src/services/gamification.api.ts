@@ -29,9 +29,8 @@ export interface StreakDataDto {
 
 export interface LeaderboardEntryDto {
     userId: string;
-    username: string;
-    fullName?: string;
-    avatarUrl?: string;
+    name: string;
+    image: string | null;
     xpEarned: number;
     quizzesCompleted: number;
     rank: number;

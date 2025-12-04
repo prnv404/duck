@@ -45,16 +45,9 @@ export default function GamificationHeader({ streak, xp, energy = 'unlimited', u
                         fontFamily="Nunito_900Black"
                         color={isDark ? '#ffffff' : '#0f172a'}
                     >
-                        Welcome
+                        DUCK 
                     </Text>
-                    <Text
-                        mt="$1"
-                        fontSize={14}
-                        fontFamily="Nunito_600SemiBold"
-                        color={isDark ? '#9ca3af' : '#6b7280'}
-                    >
-                        {`${userName || 'Learner'}`}
-                    </Text>
+                    
                 </YStack>
 
                 {/* Stats Group */}

@@ -1,8 +1,8 @@
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer, AudioSource, setAudioModeAsync } from 'expo-audio';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { practiceAPI, QuestionResponseDto, QuestionPreferenceType } from '@/services/practice.api';
 import { Alert } from 'react-native';
+import { audioFeedbackService } from '@/services/audioFeedback.service';
 
 export interface Question {
     id: string;
@@ -13,7 +13,6 @@ export interface Question {
     audioUrl?: string;
     topicName?: string;
 }
-
 
 const shuffleArray = <T,>(array: T[]): T[] => {
     const arr = [...array];
@@ -41,12 +40,10 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
     const [initError, setInitError] = useState<{ code: 'NO_QUESTIONS' | 'GENERIC'; message: string } | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
 
-    // Audio players using expo-audio hooks for feedback sounds
-    const correctSoundSource: AudioSource = useMemo(() => require('../../assets/audio/correct.mp3'), []);
-    const incorrectSoundSource: AudioSource = useMemo(() => require('../../assets/audio/incorrect.mp3'), []);
-
-    const correctPlayer = useAudioPlayer(correctSoundSource);
-    const incorrectPlayer = useAudioPlayer(incorrectSoundSource);
+    // Pre-load audio on mount
+    useEffect(() => {
+        audioFeedbackService.load();
+    }, []);
 
     // Fetch questions on mount
     useEffect(() => {
@@ -103,22 +100,7 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         initSession();
     }, [mode, subjectIds?.join(',')]);
 
-    // Configure Audio Mode using expo-audio
-    useEffect(() => {
-        const setupAudio = async () => {
-            try {
-                await setAudioModeAsync({
-                    playsInSilentMode: true,
-                    allowsRecording: false,
-                });
-            } catch (error) {
-                console.error('Error setting up audio mode:', error);
-                // Continue without audio - non-critical feature
-            }
-        };
 
-        setupAudio();
-    }, []);
 
     const rawQuestion = questions[currentQuestionIndex];
 
@@ -165,31 +147,8 @@ export const useQuizState = (mode: string = 'balanced', subjectIds?: string[]) =
         setIsCorrect(locallyCorrect);
         setHasAnswered(true);
 
-        // Play Sound based on local correctness using expo-audio
-        try {
-            // Stop both players first to prevent overlap
-            try {
-                correctPlayer.pause();
-                incorrectPlayer.pause();
-            } catch (e) {
-                // Ignore pause errors - player might not be playing
-            }
-
-            const playerToUse = locallyCorrect ? correctPlayer : incorrectPlayer;
-
-            // Small delay to ensure cleanup, then play
-            setTimeout(() => {
-                try {
-                    playerToUse.seekTo(0);
-                    playerToUse.play();
-                } catch (playError) {
-                    console.warn('Could not play feedback sound:', playError);
-                }
-            }, 50);
-        } catch (error) {
-            console.error('Error playing sound:', error);
-            // Continue without audio - non-critical feature
-        }
+        // Play Sound based on local correctness (using global audio service)
+        audioFeedbackService.playFeedback(locallyCorrect);
 
         // Strong Haptic Feedback based on local correctness
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);

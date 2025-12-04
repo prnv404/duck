@@ -1,6 +1,7 @@
 import { YStack, Text, Button, XStack } from 'tamagui';
 import { ScrollView, Alert, Linking, Modal, Pressable, StyleSheet, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
@@ -11,23 +12,26 @@ import { authAPI } from '@/services/auth.api';
 import { userAPI } from '@/services/user.api';
 import { gamificationAPI } from '@/services/gamification.api';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import StatsGrid from '@/components/profile/StatsGrid';
 import LogoutButton from '@/components/profile/LogoutButton';
-import StreakCalendar from '@/components/StreakCalendar';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import SettingRow from '@/components/profile/SettingRow';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+// Storage key prefix used by Better Auth expo client
+const BETTER_AUTH_STORAGE_PREFIX = 'duck-auth';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
+  const { signOutUser } = useAuth();
   const [darkModeEnabled, setDarkModeEnabled] = useState(isDark);
 
   const [userData, setUserData] = useState<any>(null);
   const [userStats, setUserStats] = useState<any>(null);
-  const [streakData, setStreakData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [logoutProcessing, setLogoutProcessing] = useState(false);
@@ -38,15 +42,13 @@ export default function ProfileScreen() {
 
   const fetchUserData = async () => {
     try {
-      const [user, stats, streak] = await Promise.all([
+      const [user, stats] = await Promise.all([
         authAPI.getCurrentUser(),
-        userAPI.getStats(),
-        gamificationAPI.getMyStreak()
+        userAPI.getStats()
       ]);
 
       setUserData(user);
       setUserStats(stats);
-      setStreakData(streak);
     } catch (error) {
       console.error('Failed to fetch user data:', error);
       Alert.alert('Error', 'Failed to load profile data');
@@ -60,27 +62,66 @@ export default function ProfileScreen() {
     setShowLogoutDialog(true);
   };
 
-  const handleLogoutConfirm = async () => {
-    if (logoutProcessing) return;
-
+  /**
+   * Clear all local storage data related to authentication and app state
+   * This includes Better Auth session data, legacy auth data, and onboarding state
+   */
+  const clearAllLocalData = async () => {
     try {
-      setLogoutProcessing(true);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      await AsyncStorage.removeItem("@onboarding_completed");
-      await authAPI.logout();
-      setShowLogoutDialog(false);
-      router.replace('/login');
+      // Clear Better Auth session data from SecureStore
+      const betterAuthKeys = [
+        `${BETTER_AUTH_STORAGE_PREFIX}.session`,
+        `${BETTER_AUTH_STORAGE_PREFIX}.session_token`,
+      ];
+
+      await Promise.all(
+        betterAuthKeys.map(key =>
+          SecureStore.deleteItemAsync(key).catch(() => {
+            // Ignore errors if key doesn't exist
+          })
+        )
+      );
+
+      // Clear legacy auth data and app state from AsyncStorage
+      await AsyncStorage.multiRemove([
+        '@onboarding_completed',
+        'access_token',
+        'refresh_token',
+        'user',
+      ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to logout. Please try again.');
-    } finally {
-      setLogoutProcessing(false);
+      console.error('Error clearing local data:', error);
+      // Continue with logout even if clearing fails
     }
   };
 
+  const handleLogoutConfirm = async () => {
+    if (logoutProcessing) return;
+
+    setLogoutProcessing(true);
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+    try {
+      // Call Better Auth signOut to invalidate session on server
+      await signOutUser();
+    } catch (error) {
+      // Log the error but continue with local cleanup
+      // Requirements 6.4: Clear local session even if server call fails
+      console.error('Server logout failed:', error);
+    }
+
+    // Always clear local data and navigate to login, regardless of server response
+    // Requirements 6.2, 6.3: Clear stored session data and navigate to login
+    await clearAllLocalData();
+    setShowLogoutDialog(false);
+    setLogoutProcessing(false);
+    router.replace('/login');
+  };
+
   const user = {
-    name: userData?.fullName || userData?.username || 'User',
-    email: userData?.phone || 'No phone',
-    avatar: userData?.avatarUrl || '👤',
+    name: userData?.name || 'User',
+    email: userData?.email || '',
+    avatar: userData?.image || '👤',
   };
 
   const level = userStats?.level || 1;
@@ -135,15 +176,6 @@ export default function ProfileScreen() {
     },
   ];
 
-  const calendarData: { [date: string]: number } = {};
-  if (streakData?.calendar) {
-    streakData.calendar.forEach((day: any) => {
-      const dateStr = new Date(day.activityDate).toISOString().split('T')[0];
-      const activityLevel = Math.min(day.quizzesCompleted > 0 ? day.quizzesCompleted : (day.questionsAnswered > 0 ? 1 : 0), 5);
-      calendarData[dateStr] = activityLevel;
-    });
-  }
-
   const handleDarkModeToggle = async (enabled: boolean) => {
     setDarkModeEnabled(enabled);
     setColorSchemeOverride(enabled ? 'dark' : 'light');
@@ -182,18 +214,6 @@ export default function ProfileScreen() {
           isDark={isDark}
         />
 
-        {/* Streak Calendar */}
-        <Animated.View entering={FadeInDown.delay(300)}>
-          <YStack px="$4" mt="$4">
-            <Text fontSize={20} fontFamily="Nunito_900Black" mb="$2">Activity</Text>
-            <StreakCalendar
-              currentStreak={streakData?.currentStreak || 0}
-              longestStreak={streakData?.longestStreak || 0}
-              streakData={calendarData}
-            />
-          </YStack>
-        </Animated.View>
-
         {/* Settings Section */}
         <YStack px="$4" mt="$5" gap="$3">
           <Text fontSize={20} fontFamily="Nunito_900Black" mb="$1">Settings</Text>
@@ -213,7 +233,10 @@ export default function ProfileScreen() {
             iconColor={isDark ? '#38bdf8' : '#0f766e'}
             title="Privacy Policy"
             subtitle="Learn how we handle your data"
-            onPress={() => Linking.openURL('https://your-privacy-policy-url.com')}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push('/legal/privacy');
+            }}
             isDark={isDark}
           />
 
@@ -222,7 +245,10 @@ export default function ProfileScreen() {
             iconColor={isDark ? '#a855f7' : '#7c3aed'}
             title="Terms & Legal"
             subtitle="Read the terms and legal details"
-            onPress={() => Linking.openURL('https://your-terms-and-legal-url.com')}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push('/legal/terms');
+            }}
             isDark={isDark}
           />
         </YStack>
