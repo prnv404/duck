@@ -52,11 +52,50 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: sessionData, isPending, error } = useSession();
 
+    // Validate and refresh session on app startup
+    // Requirements: 7.1 - Validate current session before proceeding to protected screens
+    useEffect(() => {
+        const validateSession = async () => {
+            if (!isPending && sessionData?.session) {
+                console.log('[Auth] Validating session on startup...');
+                try {
+                    // Force a session check to ensure it's still valid
+                    // This will trigger Better Auth to refresh if needed
+                    const freshSession = await fetch(`${process.env.EXPO_PUBLIC_API_URL || 'https://duck-server-production.up.railway.app'}/auth/get-session`, {
+                        method: 'GET',
+                        credentials: 'include',
+                    });
+
+                    if (!freshSession.ok) {
+                        console.log('[Auth] Session validation failed, session may be expired');
+                    } else {
+                        console.log('[Auth] Session validated successfully');
+                    }
+                } catch (error) {
+                    console.error('[Auth] Session validation error:', error);
+                }
+            }
+        };
+
+        validateSession();
+
+        // Set up periodic session validation (every 6 hours when app is active)
+        // This ensures the session stays fresh even if user doesn't make API calls
+        const intervalId = setInterval(() => {
+            if (sessionData?.session) {
+                console.log('[Auth] Periodic session validation...');
+                validateSession();
+            }
+        }, 6 * 60 * 60 * 1000); // 6 hours
+
+        return () => clearInterval(intervalId);
+    }, [isPending, sessionData?.session]);
+
     // Handle session errors (including expiration)
     // Requirements: 7.1, 7.5 - Session error handling
     useEffect(() => {
         if (error) {
-            console.error('Session error:', error);
+            console.error('[Auth] Session error:', error);
             // Session is invalid, the navigation will handle redirect
             // based on isAuthenticated being false
         }

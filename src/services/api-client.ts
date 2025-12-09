@@ -44,18 +44,35 @@ class ApiClient {
      */
     private async attemptSessionRefresh(): Promise<boolean> {
         if (this.isRefreshing) {
+            console.log('[API Client] Already refreshing, skipping...');
             return false;
         }
 
         this.isRefreshing = true;
+        console.log('[API Client] Attempting to refresh session...');
+
         try {
-            // Try to get fresh session data
-            // Better Auth will automatically refresh if needed
-            const session = await authClient.getSession();
-            const isValid = !!session?.data?.session;
-            return isValid;
+            // Force a session refresh by making a request to the session endpoint
+            // This will trigger Better Auth to validate and potentially refresh the session
+            const response = await fetch(`${API_BASE_URL}/auth/get-session`, {
+                method: 'GET',
+                headers: {
+                    'Cookie': this.getSessionCookies(),
+                },
+                credentials: 'omit',
+            });
+
+            if (response.ok) {
+                const sessionData = await response.json();
+                const isValid = !!sessionData?.session;
+                console.log('[API Client] Session refresh result:', isValid ? 'SUCCESS' : 'FAILED');
+                return isValid;
+            }
+
+            console.log('[API Client] Session refresh failed with status:', response.status);
+            return false;
         } catch (error) {
-            console.error('Session refresh failed:', error);
+            console.error('[API Client] Session refresh error:', error);
             return false;
         } finally {
             this.isRefreshing = false;
