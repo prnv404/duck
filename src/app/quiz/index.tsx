@@ -171,11 +171,13 @@ export default function QuizScreen() {
     };
 
     const handleCompletionContinue = () => {
+        // First hide the completion screen
+        setShowCompletionScreen(false);
+
+        // Use push with reset to clear the navigation stack
+        // This prevents the back button from returning to the quiz screen
+        router.dismissAll();
         router.replace('/(tabs)/home');
-        // Hide completion screen after navigation to prevent white flash
-        setTimeout(() => {
-            setShowCompletionScreen(false);
-        }, 400);
     };
 
     if (quiz.loading) {
@@ -390,11 +392,24 @@ export default function QuizScreen() {
                                 </YStack>
                             ) : (
                                 <YStack gap="$2.5" mb="$3">
+                                    {/* Result Message */}
                                     <Animated.View entering={FadeInUp.duration(250).springify()}>
                                         <ResultMessage
                                             isCorrect={quiz.isCorrect}
                                             correctAnswer={quiz.currentQuestion.correctAnswer}
                                             explanation={quiz.currentQuestion.explanation}
+                                            isDark={isDark}
+                                        />
+                                    </Animated.View>
+
+                                    {/* Feedback Section for incorrect answers */}
+                                    <Animated.View entering={FadeInUp.delay(100).duration(250).springify()}>
+                                        <FeedbackSection
+                                            questionFeedback={quiz.questionFeedback}
+                                            showFeedbackOptions={quiz.showFeedbackOptions}
+                                            feedbackReason={quiz.feedbackReason}
+                                            onFeedback={quiz.handleFeedback}
+                                            onFeedbackReason={quiz.handleFeedbackReason}
                                             isDark={isDark}
                                         />
                                     </Animated.View>

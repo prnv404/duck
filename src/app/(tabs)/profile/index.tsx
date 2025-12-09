@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useColorScheme, setColorSchemeOverride } from '@/hooks/use-color-scheme';
+import { useTabScreenBottomPadding } from '@/hooks/use-tab-bar-height';
 
 import * as Haptics from 'expo-haptics';
 import { authAPI } from '@/services/auth.api';
@@ -28,7 +29,7 @@ export default function ProfileScreen() {
   const isDark = useColorScheme() === 'dark';
   const router = useRouter();
   const { signOutUser } = useAuth();
-  const [darkModeEnabled, setDarkModeEnabled] = useState(isDark);
+  const bottomPadding = useTabScreenBottomPadding(44);
 
   const [userData, setUserData] = useState<any>(null);
   const [userStats, setUserStats] = useState<any>(null);
@@ -176,17 +177,11 @@ export default function ProfileScreen() {
     },
   ];
 
-  const handleDarkModeToggle = async (enabled: boolean) => {
-    setDarkModeEnabled(enabled);
-    setColorSchemeOverride(enabled ? 'dark' : 'light');
-    await Haptics.selectionAsync();
-  };
-
   return (
     <YStack f={1} bg="$background">
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+        contentContainerStyle={{ paddingBottom: bottomPadding }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -217,16 +212,6 @@ export default function ProfileScreen() {
         {/* Settings Section */}
         <YStack px="$4" mt="$5" gap="$3">
           <Text fontSize={20} fontFamily="Nunito_900Black" mb="$1">Settings</Text>
-          <SettingRow
-            icon="moon"
-            iconColor={isDark ? '#fbbf24' : '#111827'}
-            title="Dark Mode"
-            subtitle="Override system theme with a darker look"
-            hasToggle
-            toggleValue={darkModeEnabled}
-            onToggle={handleDarkModeToggle}
-            isDark={isDark}
-          />
 
           <SettingRow
             icon="shield-checkmark-outline"

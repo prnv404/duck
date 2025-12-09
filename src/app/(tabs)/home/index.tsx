@@ -4,6 +4,7 @@ import FocusAreas from '@/components/home/FocusAreas';
 import HomeHeader from '@/components/home/HomeHeader';
 import HomeLoadingSkeleton from '@/components/home/HomeLoadingSkeleton';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTabScreenBottomPadding } from '@/hooks/use-tab-bar-height';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState, useCallback } from 'react';
@@ -22,6 +23,7 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
+  const bottomPadding = useTabScreenBottomPadding(64);
 
   const [userData, setUserData] = useState<any>(null);
   const [userStats, setUserStats] = useState<any>(null);
@@ -130,7 +132,7 @@ export default function HomeScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingTop: insets.top + 16,
-            paddingBottom: insets.bottom + 120,
+            paddingBottom: bottomPadding,
             paddingHorizontal: 16,
           }}
         >
@@ -146,7 +148,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingTop: insets.top + 16,
-          paddingBottom: insets.bottom + 120,
+          paddingBottom: bottomPadding,
           paddingHorizontal: 16,
         }}
       >

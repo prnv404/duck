@@ -153,7 +153,7 @@ export default function StreakCalendar({
         >
           <XStack ai="center" jc="space-between" mb="$3">
             <YStack>
-              <Text fontSize={16} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0f172a'}>Please maintain daily streak</Text>
+              <Text fontSize={16} fontFamily="Nunito_800ExtraBold" color={isDark ? '#ffffff' : '#0f172a'}>Daily streak</Text>
             </YStack>
             <YStack ai="flex-end">
               <XStack ai="center" gap="$1">

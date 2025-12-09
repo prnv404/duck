@@ -66,7 +66,7 @@ export default function ModeExplainScreen() {
 
   const bgColor = isDark ? '#0a0a0a' : '#f8fafc';
   const textColor = isDark ? '#e2e8f0' : '#1e293b';
-  const textSecondary = isDark ? '#94a3b8' : '#64748b';
+  const textSecondary = isDark ? '#f4f4f4ff' : '#131313ff';
 
   const handleShare = async () => {
     try {
@@ -97,7 +97,10 @@ export default function ModeExplainScreen() {
 
   const handleStartQuiz = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    router.push(`/quiz?mode=${mode}` as any);
+    // Pass subjectId if it exists in params
+    const subjectId = typeof params.subjectId === 'string' ? params.subjectId : undefined;
+    const queryParams = subjectId ? `mode=${mode}&subjectId=${subjectId}` : `mode=${mode}`;
+    router.push(`/quiz?${queryParams}` as any);
   };
 
   return (
@@ -188,6 +191,26 @@ export default function ModeExplainScreen() {
           </Animated.View>
         </YStack>
 
+        {/* Share - Better attention */}
+        <Animated.View entering={FadeInDown.delay(400).springify()}>
+          <Pressable
+            onPress={handleShare}
+            disabled={isSharing}
+            style={({ pressed }) => ({
+              opacity: pressed || isSharing ? 0.5 : 0.75,
+              marginTop: -2,
+            })}
+          >
+            <XStack ai="center" gap="$2" paddingBottom={30} paddingLeft={90}>
+              <MaterialCommunityIcons name="share-variant" size={16} color={textSecondary} />
+              <Text
+                fontFamily="Nunito_600SemiBold" fontSize={12.5} color={textSecondary}>
+                {isSharing ? 'Sharing...' : 'Share Duck with friends'}
+              </Text>
+            </XStack>
+          </Pressable>
+        </Animated.View>
+
         {/* Bottom Actions */}
         <YStack gap="$4" ai="center">
           {/* Start Button - Main CTA */}
@@ -243,24 +266,7 @@ export default function ModeExplainScreen() {
             </Pressable>
           </Animated.View>
 
-          {/* Share - Better attention */}
-          <Animated.View entering={FadeInDown.delay(400).springify()}>
-            <Pressable
-              onPress={handleShare}
-              disabled={isSharing}
-              style={({ pressed }) => ({
-                opacity: pressed || isSharing ? 0.5 : 0.75,
-                marginTop: -2,
-              })}
-            >
-              <XStack ai="center" gap="$2">
-                <MaterialCommunityIcons name="share-variant" size={16} color={textSecondary} />
-                <Text fontFamily="Nunito_600SemiBold" fontSize={12.5} color={textSecondary}>
-                  {isSharing ? 'Sharing...' : 'Share Duck with friends'}
-                </Text>
-              </XStack>
-            </Pressable>
-          </Animated.View>
+
         </YStack>
       </YStack>
     </SafeAreaView>

@@ -1,8 +1,8 @@
 import { authClient } from '@/lib/auth';
 
 // Base URL for the REST API
-const API_BASE_URL = 'https://duck-server-production.up.railway.app';
-
+// const API_BASE_URL = 'https://delia-unsigneted-marcela.ngrok-free.dev'
+const API_BASE_URL = 'https://duck-server-production.up.railway.app'// console.log(process.env.NODE_ENV)
 /**
  * API Client for making authenticated requests
  * Uses Better Auth session for authentication

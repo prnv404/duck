@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer } from 'expo-audio';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, useColorScheme } from 'react-native';
+import { Modal, Pressable } from 'react-native';
 import { Text, XStack, YStack, Circle } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,46 +20,85 @@ interface SessionCompletionScreenProps {
     onContinue: () => void;
 }
 
-// Counter animation component
-const AnimatedCounter = ({ value, delay = 0, isTime = false }: { value: number | string; delay?: number; isTime?: boolean }) => {
-    const [displayValue, setDisplayValue] = useState(isTime ? '0s' : 0);
+const AnimatedCounter = ({ value, delay = 0 }: { value: number; delay?: number }) => {
+    const [displayValue, setDisplayValue] = useState(0);
 
     useEffect(() => {
-        if (isTime) {
-            const timer = setTimeout(() => {
-                setDisplayValue(value as string);
-            }, delay);
-            return () => clearTimeout(timer);
-        } else {
-            const numValue = typeof value === 'number' ? value : parseInt(value as string);
-            const timer = setTimeout(() => {
-                let current = 0;
-                const increment = numValue / 30;
-                const interval = setInterval(() => {
-                    current += increment;
-                    if (current >= numValue) {
-                        setDisplayValue(numValue);
-                        clearInterval(interval);
-                    } else {
-                        setDisplayValue(Math.floor(current));
-                    }
-                }, 30);
-                return () => clearInterval(interval);
-            }, delay);
-            return () => clearTimeout(timer);
-        }
-    }, [value, delay, isTime]);
+        const timer = setTimeout(() => {
+            let current = 0;
+            const increment = value / 30;
+            if (value === 0) {
+                setDisplayValue(0);
+                return;
+            }
 
+            const interval = setInterval(() => {
+                current += increment;
+                if (current >= value) {
+                    setDisplayValue(value);
+                    clearInterval(interval);
+                } else {
+                    setDisplayValue(Math.floor(current));
+                }
+            }, 16);
+            return () => clearInterval(interval);
+        }, delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+
+    // Return the number as a string so it can be rendered inside a Text component
     return <>{displayValue}</>;
 };
+
+const StatCard = ({
+    label,
+    value,
+    color = "#000000",
+    delay,
+    icon,
+    suffix
+}: {
+    label: string,
+    value: number | string,
+    color?: string,
+    delay: number,
+    icon: keyof typeof MaterialCommunityIcons.glyphMap,
+    suffix?: string
+}) => (
+    <YStack
+        f={1}
+        bg="#f8f9fa"
+        br={24}
+        py="$3.5" // Slightly tighter vertical padding
+        px="$3"
+        ai="center"
+        jc="space-between"
+        minHeight={130} // Reduced slightly to fit smaller screens better
+    >
+        <MaterialCommunityIcons name={icon} size={20} color={color} style={{ opacity: 0.2 }} />
+        <YStack ai="center" mt="$-2">
+            <XStack ai="flex-end">
+                <Text fontSize={32} fontFamily="Nunito_900Black" color={color} lineHeight={34}>
+                    {typeof value === 'number' ? <AnimatedCounter value={value} delay={delay} /> : value}
+                </Text>
+                {suffix && (
+                    <Text fontSize={18} fontFamily="Nunito_700Bold" color={color} lineHeight={30} mb={2} opacity={0.6}>
+                        {suffix}
+                    </Text>
+                )}
+            </XStack>
+        </YStack>
+        <Text fontSize={11} fontFamily="Nunito_700Bold" color="#9CA3AF" letterSpacing={0.5} textTransform="uppercase">
+            {label}
+        </Text>
+    </YStack>
+);
 
 export default function SessionCompletionScreen({
     visible,
     sessionData,
     onContinue,
 }: SessionCompletionScreenProps) {
-    const colorScheme = useColorScheme();
-    const isDark = colorScheme === 'dark';
     const insets = useSafeAreaInsets();
     const player = useAudioPlayer(require('../../../assets/audio/reward.mp3'));
 
@@ -82,192 +121,132 @@ export default function SessionCompletionScreen({
 
     const minutes = Math.floor(timeSpentSeconds / 60);
     const seconds = timeSpentSeconds % 60;
-    const timeDisplay = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-
-    // Theme colors
-    const bg = isDark ? '#000000' : '#ffffff';
-    const text = isDark ? '#ffffff' : '#000000';
-    const textMuted = isDark ? '#666666' : '#999999';
-    const cardBg = isDark ? '#0a0a0a' : '#fafafa';
+    const timeDisplay = minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : seconds;
+    const timeSuffix = minutes > 0 ? '' : 's';
 
     return (
         <Modal visible={visible} animationType="fade" statusBarTranslucent transparent={false}>
-            <YStack
-                f={1}
-                bg={bg}
-                pt={insets.top + 80}
-                pb={Math.max(insets.bottom, 20) + 20}
-                px="$6"
-                jc="space-between"
-            >
-                {/* Score Section */}
-                <YStack ai="center" gap="$4">
-                    <Text
-                        fontSize={11}
-                        fontFamily="Nunito_600SemiBold"
-                        color={textMuted}
-                        textTransform="uppercase"
-                        letterSpacing={2}
-                    >
-                        Quiz Complete
-                    </Text>
-                    <YStack ai="center" mt="$2">
+            {/* FIX: Added `+ 20` to top padding to clear status bar completely.
+               Changed `jc` to `flex-start` so content doesn't float up.
+            */}
+            <YStack f={1} bg="#ffffff" pt={insets.top + 20} pb={insets.bottom + 10} px="$5">
+
+                {/* CONTENT CONTAINER 
+                    We use a spacer to push this whole block down slightly, 
+                    and `f={1}` to let it take up available space but centered properly.
+                */}
+                <YStack f={1} jc="center" gap="$6">
+
+                    {/* Header Section */}
+                    <YStack ai="center" gap="$2">
+                        <Circle size={64} bg="#dcfce7">
+                            <MaterialCommunityIcons name="trophy-variant" size={32} color="#16a34a" />
+                        </Circle>
+                        <YStack ai="center">
+                            <Text fontSize={24} fontFamily="Nunito_800ExtraBold" color="#000000">
+                                Session Complete!
+                            </Text>
+                            <Text fontSize={14} fontFamily="Nunito_600SemiBold" color="#9CA3AF">
+                                Here is how you performed
+                            </Text>
+                        </YStack>
+                    </YStack>
+
+                    {/* Big Score Section */}
+                    {/* Big Score Section */}
+                    <YStack ai="center" py="$2">
+                        <XStack ai="flex-start" h={100}> {/* Give the container explicit height to prevent layout shifts */}
+                            <Text
+                                fontSize={80}
+                                fontFamily="Nunito_900Black"
+                                color="#000000"
+                                lineHeight={90} // INCREASED: 80 -> 90 to prevent clipping
+                                letterSpacing={-2}
+                                pt="$2" // Add slight top padding to push glyphs down into the box
+                            >
+                                <AnimatedCounter value={accuracyValue} delay={200} />
+                            </Text>
+                            <Text
+                                fontSize={32}
+                                fontFamily="Nunito_800ExtraBold"
+                                color="#000000"
+                                mt="$4" // Push the % symbol down slightly to align with the numbers
+                            >
+                                %
+                            </Text>
+                        </XStack>
                         <Text
-                            fontSize={96}
-                            fontFamily="Nunito_900Black"
-                            color={text}
-                            letterSpacing={-4}
-                            lineHeight={96}
+                            fontSize={12}
+                            fontFamily="Nunito_700Bold"
+                            color="#9CA3AF"
+                            bg="#f3f4f6"
+                            px="$3"
+                            py="$1"
+                            br={12}
+                            overflow="hidden"
+                            letterSpacing={1}
+                            mt="$-2" // Pull the label up slightly closer to the number
                         >
-                            <AnimatedCounter value={accuracyValue} delay={300} />%
+                            ACCURACY
                         </Text>
                     </YStack>
-                    <Text
-                        fontSize={15}
-                        fontFamily="Nunito_600SemiBold"
-                        color={textMuted}
-                    >
-                        {correctAnswers} of {questionsAttempted} correct
-                    </Text>
+
+                    {/* Grid System */}
+                    <YStack gap="$3">
+                        <XStack gap="$3">
+                            <StatCard
+                                label="Correct"
+                                value={correctAnswers}
+                                color="#16a34a"
+                                delay={300}
+                                icon="check-circle-outline"
+                            />
+                            <StatCard
+                                label="Mistakes"
+                                value={wrongAnswers}
+                                color="#ef4444"
+                                delay={400}
+                                icon="close-circle-outline"
+                            />
+                        </XStack>
+
+                        <XStack gap="$3">
+                            <StatCard
+                                label="Time"
+                                value={timeDisplay}
+                                suffix={timeSuffix}
+                                color="#000000"
+                                delay={0}
+                                icon="clock-outline"
+                            />
+                            <StatCard
+                                label="Questions"
+                                value={questionsAttempted}
+                                color="#000000"
+                                delay={500}
+                                icon="format-list-numbered"
+                            />
+                        </XStack>
+                    </YStack>
                 </YStack>
 
-                {/* Metrics Grid */}
-                <YStack gap="$4" mb="$4">
-                    <XStack gap="$3">
-                        {/* Correct */}
-                        <YStack
-                            f={1}
-                            bg={cardBg}
-                            p="$4"
-                            br={20}
-                            ai="center"
-                            gap="$3"
-                        >
-                            <Circle size={48} bg={isDark ? '#1a1a1a' : '#f0f0f0'}>
-                                <MaterialCommunityIcons
-                                    name="check"
-                                    size={24}
-                                    color={text}
-                                />
-                            </Circle>
-                            <Text
-                                fontSize={36}
-                                fontFamily="Nunito_900Black"
-                                color={text}
-                                letterSpacing={-2}
-                            >
-                                <AnimatedCounter value={correctAnswers} delay={500} />
-                            </Text>
-                            <Text
-                                fontSize={10}
-                                fontFamily="Nunito_700Bold"
-                                color={textMuted}
-                                textTransform="uppercase"
-                                letterSpacing={1.5}
-                            >
-                                Correct
-                            </Text>
-                        </YStack>
-
-                        {/* Wrong */}
-                        <YStack
-                            f={1}
-                            bg={cardBg}
-                            p="$4"
-                            br={20}
-                            ai="center"
-                            gap="$3"
-                        >
-                            <Circle size={48} bg={isDark ? '#1a1a1a' : '#f0f0f0'}>
-                                <MaterialCommunityIcons
-                                    name="close"
-                                    size={24}
-                                    color={text}
-                                />
-                            </Circle>
-                            <Text
-                                fontSize={36}
-                                fontFamily="Nunito_900Black"
-                                color={text}
-                                letterSpacing={-2}
-                            >
-                                <AnimatedCounter value={wrongAnswers} delay={600} />
-                            </Text>
-                            <Text
-                                fontSize={10}
-                                fontFamily="Nunito_700Bold"
-                                color={textMuted}
-                                textTransform="uppercase"
-                                letterSpacing={1.5}
-                            >
-                                Wrong
-                            </Text>
-                        </YStack>
-
-                        {/* Time */}
-                        <YStack
-                            f={1}
-                            bg={cardBg}
-                            p="$4"
-                            br={20}
-                            ai="center"
-                            gap="$3"
-                        >
-                            <Circle size={48} bg={isDark ? '#1a1a1a' : '#f0f0f0'}>
-                                <MaterialCommunityIcons
-                                    name="clock-outline"
-                                    size={24}
-                                    color={text}
-                                />
-                            </Circle>
-                            <Text
-                                fontSize={36}
-                                fontFamily="Nunito_900Black"
-                                color={text}
-                                letterSpacing={-2}
-                            >
-                                <AnimatedCounter value={timeDisplay} delay={700} isTime />
-                            </Text>
-                            <Text
-                                fontSize={10}
-                                fontFamily="Nunito_700Bold"
-                                color={textMuted}
-                                textTransform="uppercase"
-                                letterSpacing={1.5}
-                            >
-                                Time
-                            </Text>
-                        </YStack>
-                    </XStack>
-
-                    {/* Button */}
+                {/* Footer Button - Pushed to bottom via Flex logic above */}
+                <YStack pt="$4">
                     <Pressable
                         onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                             onContinue();
                         }}
-                        style={({ pressed }) => ({
-                            opacity: pressed ? 0.6 : 1,
-                        })}
+                        style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
                     >
-                        <YStack
-                            bg={text}
-                            h={56}
-                            br={28}
-                            ai="center"
-                            jc="center"
-                        >
-                            <Text
-                                fontSize={16}
-                                fontFamily="Nunito_800ExtraBold"
-                                color={bg}
-                                letterSpacing={0.5}
-                            >
+                        <YStack bg="#000000" h={56} br={28} ai="center" jc="center" shadowColor="#000" shadowOpacity={0.1} shadowRadius={10} shadowOffset={{ width: 0, height: 4 }}>
+                            <Text fontSize={17} fontFamily="Nunito_800ExtraBold" color="#ffffff">
                                 Continue
                             </Text>
                         </YStack>
                     </Pressable>
                 </YStack>
+
             </YStack>
         </Modal>
     );
